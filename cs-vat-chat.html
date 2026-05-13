@@ -643,6 +643,18 @@
 </div>
 
 <script>
+    // UTF-8 Excel Export Helper with Vietnamese encoding support
+    function exportToExcelUTF8(wb, filename) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+    
     // INITIALIZATION
     let equipment = [];
     let maintenance = [];
@@ -940,7 +952,7 @@
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Thiết Bị');
-        XLSX.writeFile(wb, `thiet-bi-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+        exportToExcelUTF8(wb, `thiet-bi-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
     }
 
     function importEquipmentFromExcel() {
@@ -991,7 +1003,7 @@
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Phòng Học');
-        XLSX.writeFile(wb, `phong-hoc-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+        exportToExcelUTF8(wb, `phong-hoc-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
     }
 
     // ==================== REPORT ====================
@@ -1044,7 +1056,7 @@
         const ws = XLSX.utils.table_to_sheet(document.getElementById('reportByType'));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo');
-        XLSX.writeFile(wb, `bao-cao-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+        exportToExcelUTF8(wb, `bao-cao-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
     }
 
     // ==================== TAB SWITCHING ====================

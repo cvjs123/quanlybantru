@@ -375,6 +375,18 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
 <script>
+    // UTF-8 Excel Export Helper with Vietnamese encoding support
+    function exportToExcelUTF8(wb, filename) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+    
     let schedules = [];
     let activityCount = 0;
 
@@ -588,7 +600,7 @@
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'TKB');
-        XLSX.writeFile(wb, `TKB_${room}_${date}.xlsx`);
+        exportToExcelUTF8(wb, `TKB_${room}_${date}.xlsx`);
         showMessage('Xuất Excel thành công!');
     }
 

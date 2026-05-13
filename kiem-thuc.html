@@ -623,6 +623,18 @@
 </div>
 
 <script>
+    // UTF-8 Excel Export Helper with Vietnamese encoding support
+    function exportToExcelUTF8(wb, filename) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+    
     // INITIALIZATION
     let forms = [];
     let currentFormId = null;
@@ -1080,7 +1092,7 @@
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Phiếu Kiểm Kê');
-        XLSX.writeFile(wb, `phieu-kiem-ke-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+        exportToExcelUTF8(wb, `phieu-kiem-ke-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
     }
 
     function exportReportToExcel() {
@@ -1089,7 +1101,7 @@
         const ws = XLSX.utils.table_to_sheet(table.closest('table'));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo Chênh Lệch');
-        XLSX.writeFile(wb, `bao-cao-chenlech-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+        exportToExcelUTF8(wb, `bao-cao-chenlech-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
     }
 
     // ==================== TAB SWITCHING ====================

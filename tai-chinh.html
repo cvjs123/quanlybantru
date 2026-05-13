@@ -496,6 +496,18 @@
 </div>
 
 <script>
+    // UTF-8 Excel Export Helper with Vietnamese encoding support
+    function exportToExcelUTF8(wb, filename) {
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+    
     let invoices = [];
     let expenses = [];
 
@@ -762,7 +774,7 @@
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Hóa Đơn');
-        XLSX.writeFile(wb, 'hoa-don.xlsx');
+        exportToExcelUTF8(wb, 'hoa-don.xlsx');
     }
 
     function exportExpenseExcel() {
@@ -770,7 +782,7 @@
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Chi Tiêu');
-        XLSX.writeFile(wb, 'chi-tieu.xlsx');
+        exportToExcelUTF8(wb, 'chi-tieu.xlsx');
     }
 
     function exportReportExcel() {
@@ -778,7 +790,7 @@
         const ws = XLSX.utils.table_to_sheet(table);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo');
-        XLSX.writeFile(wb, 'bao-cao-tai-chinh.xlsx');
+        exportToExcelUTF8(wb, 'bao-cao-tai-chinh.xlsx');
     }
 
     function switchTab(btn, tabName) {

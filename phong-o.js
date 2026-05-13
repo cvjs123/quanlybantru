@@ -254,9 +254,28 @@ document.addEventListener('DOMContentLoaded', () => {
             'Sĩ số': room.currentCount,
             'SDT': room.teacherPhone
         })));
+        
+        // Auto-fit column width
+        ws['!cols'] = [
+            { wch: 15 }, // Tên phòng
+            { wch: 25 }, // Giáo viên phụ trách
+            { wch: 12 }, // Sĩ số
+            { wch: 15 }  // SDT
+        ];
+        
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Danh sách phòng');
-        XLSX.writeFile(wb, 'danh-sach-phong.xlsx');
+        
+        // Add UTF-8 BOM for proper Vietnamese encoding
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'danh-sach-phong.xlsx';
+        link.click();
+        URL.revokeObjectURL(url);
+        
         alert('Đã xuất file Excel.');
     });
 

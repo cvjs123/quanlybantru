@@ -514,9 +514,30 @@
             ['CBGV001', 'Nguyễn Văn A', 'Toán', '0123456789', 'Phòng 101']
         ];
         const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Auto-fit column width
+        ws['!cols'] = [
+            { wch: 15 }, // Mã CBGV
+            { wch: 25 }, // Họ Tên
+            { wch: 15 }, // Môn Học
+            { wch: 15 }, // Điện Thoại
+            { wch: 20 }  // Phụ trách phòng
+        ];
+        
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Template');
-        XLSX.writeFile(wb, 'mau_danh_sach_cbgv.xlsx');
+        
+        // Add UTF-8 BOM for proper Vietnamese encoding
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), wbout], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'mau_danh_sach_cbgv.xlsx';
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        alert('Đã xuất file mẫu Excel!');
     }
 
     // Update teacher list display
