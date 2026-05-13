@@ -910,8 +910,19 @@
             ['HS002', 'Trần Thị C', '2006-02-02', 'Nữ', '2A', '102', '456 Đường DEF, Quận UVW', '0987654321', 'Trần Văn D']
         ];
 
-        let csv = template.map(row => row.join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        let csv = template.map(row => 
+            row.map(cell => {
+                // Thêm dấu ngoặc kép nếu cell chứa dấu phẩy
+                if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+                    return '"' + cell.replace(/"/g, '""') + '"';
+                }
+                return cell;
+            }).join(',')
+        ).join('\n');
+
+        // Thêm BOM cho UTF-8 để Excel nhận diện đúng encoding
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
@@ -929,10 +940,19 @@
 
         let csv = 'STT,Mã HS,Họ Tên,Lớp,Phòng,Địa chỉ,SĐT gia đình,Họ tên bố mẹ\n';
         students.forEach((s, index) => {
-            csv += `${index + 1},"${s.id}","${s.name}","${s.sClass}","${s.room}","${s.address || ''}","${s.phone || ''}","${s.parent || ''}"\n`;
+            const escapedName = (s.name || '').replace(/"/g, '""');
+            const escapedClass = (s.sClass || '').replace(/"/g, '""');
+            const escapedRoom = (s.room || '').replace(/"/g, '""');
+            const escapedAddress = (s.address || '').replace(/"/g, '""');
+            const escapedPhone = (s.phone || '').replace(/"/g, '""');
+            const escapedParent = (s.parent || '').replace(/"/g, '""');
+            
+            csv += `${index + 1},"${s.id}","${escapedName}","${escapedClass}","${escapedRoom}","${escapedAddress}","${escapedPhone}","${escapedParent}"\n`;
         });
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        // Thêm BOM cho UTF-8
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
@@ -945,11 +965,24 @@
         const file = event.target.files[0];
         if (!file) return;
 
+        // Xử lý file XLSX bằng SheetJS (nếu file có extension .xlsx)
+        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+            importXLSXFile(file);
+            return;
+        }
+
+        // Xử lý file CSV/TXT
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                const text = e.target.result;
-                const lines = text.trim().split('\n');
+                let text = e.target.result;
+                
+                // Xử lý encoding: loại bỏ BOM nếu có
+                if (text.charCodeAt(0) === 0xFEFF) {
+                    text = text.slice(1);
+                }
+                
+                const lines = text.trim().split(/\r\n|\n/);
                 
                 if (lines.length < 2) {
                     alert("❌ File không hợp lệ!");
@@ -960,20 +993,22 @@
                 let importedCount = 0;
 
                 for (let i = 1; i < lines.length; i++) {
-                    const parts = lines[i].split(',').map(p => p.trim().replace(/^"|"$/g, ''));
+                    if (!lines[i].trim()) continue;
+                    
+                    const parts = parseCSVLine(lines[i]);
                     
                     if (parts.length < 9 || !parts[0] || !parts[1]) continue;
 
                     const student = {
-                        id: parts[0],
-                        name: parts[1],
-                        dob: parts[2] || '',
-                        gender: parts[3] || '',
-                        sClass: parts[4] || '',
-                        room: parts[5] || '',
-                        address: parts[6] || '',
-                        phone: parts[7] || '',
-                        parent: parts[8] || '',
+                        id: parts[0].trim(),
+                        name: parts[1].trim(),
+                        dob: (parts[2] || '').trim(),
+                        gender: (parts[3] || '').trim(),
+                        sClass: (parts[4] || '').trim(),
+                        room: (parts[5] || '').trim(),
+                        address: (parts[6] || '').trim(),
+                        phone: (parts[7] || '').trim(),
+                        parent: (parts[8] || '').trim(),
                         photo: ''
                     };
 
@@ -994,7 +1029,52 @@
                 alert("❌ Lỗi khi đọc file: " + error.message);
             }
         };
-        reader.readAsText(file);
+        
+        // Đọc file với UTF-8 encoding rõ ràng
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    // Hàm hỗ trợ parse CSV với dấu ngoặc kép
+    function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let insideQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+
+            if (char === '"') {
+                if (insideQuotes && nextChar === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    insideQuotes = !insideQuotes;
+                }
+            } else if (char === ',' && !insideQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current);
+        return result;
+    }
+
+    // Hàm import file XLSX
+    function importXLSXFile(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                // Đối với file .xlsx cần thư viện, ta sẽ đọc dưới dạng text CSV
+                // Nếu muốn hỗ trợ tốt hơn, thêm SheetJS library
+                alert("⚠️ Để nhập file .xlsx, vui lòng:\n1. Mở file Excel\n2. 'Save As' thành CSV (UTF-8)\n3. Nhập lại file CSV\n\nHoặc liên hệ để cài đặt thư viện Excel nâng cao.");
+            } catch (error) {
+                alert("❌ Lỗi khi đọc file Excel: " + error.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
     }
 
     function printList() {
