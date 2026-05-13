@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cơ Sở Vật Chất</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #e8f5e9 0%, #f1f8f6 100%);
+            padding: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: #eeeeee;
+        }
+
+        .tab-btn.active {
+            color: #2E7D32;
+            border-bottom-color: #2E7D32;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            color: #2E7D32;
+            border-bottom: 2px solid #2E7D32;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #2E7D32;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1B5E20;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #2E7D32;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin-right: 5px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2E7D32;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-good {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-warning {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+
+        .status-danger {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2E7D32;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .alert-error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 12px 15px;
+                font-size: 0.85rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <h1><i class="fas fa-tools"></i> QUẢN LÝ CƠ SỞ VẬT CHẤT</h1>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'dashboard')">
+            <i class="fas fa-chart-bar"></i> Tổng Quan
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'equipment')">
+            <i class="fas fa-microchip"></i> Quản Lý Thiết Bị
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'rooms')">
+            <i class="fas fa-door-open"></i> Phòng Học
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'maintenance')">
+            <i class="fas fa-wrench"></i> Bảo Trì
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'report')">
+            <i class="fas fa-file-pdf"></i> Báo Cáo
+        </button>
+    </div>
+
+    <!-- TAB: TỔNG QUAN -->
+    <div id="dashboard" class="tab-content active">
+        <h2 class="section-title">Tổng Quan Cơ Sở Vật Chất</h2>
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Tổng Thiết Bị</h3>
+                <div class="number" id="totalEquipment">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Thiết Bị Hoạt Động</h3>
+                <div class="number" id="equipmentGood">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Cần Bảo Trì</h3>
+                <div class="number" id="equipmentMaintenance">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Hỏng / Không Dùng</h3>
+                <div class="number" id="equipmentBad">0</div>
+            </div>
+        </div>
+        <h3>Thiết Bị Cần Chú Ý</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Thiết Bị</th>
+                    <th>Tên</th>
+                    <th>Loại</th>
+                    <th>Tình Trạng</th>
+                    <th>Nơi Đặt</th>
+                </tr>
+            </thead>
+            <tbody id="alertEquipmentTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: QUẢN LÝ THIẾT BỊ -->
+    <div id="equipment" class="tab-content">
+        <h2 class="section-title">Quản Lý Thiết Bị / Tài Sản</h2>
+        
+        <div id="messageBox" style="display: none;"></div>
+
+        <h3>Thêm/Sửa Thiết Bị</h3>
+        <form id="equipmentForm">
+            <div class="form-group">
+                <div>
+                    <label for="equipmentId">Mã Thiết Bị *</label>
+                    <input type="text" id="equipmentId" placeholder="VD: TB001" required>
+                </div>
+                <div>
+                    <label for="equipmentName">Tên Thiết Bị *</label>
+                    <input type="text" id="equipmentName" placeholder="VD: Máy chiếu" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="equipmentType">Loại Thiết Bị *</label>
+                    <select id="equipmentType" required>
+                        <option value="">-- Chọn loại --</option>
+                        <option value="Điện tử">Điện tử</option>
+                        <option value="Nội thất">Nội thất</option>
+                        <option value="Điện">Điện</option>
+                        <option value="Vệ sinh">Vệ sinh</option>
+                        <option value="An toàn">An toàn</option>
+                        <option value="Thể thao">Thể thao</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="equipmentQuantity">Số Lượng *</label>
+                    <input type="number" id="equipmentQuantity" min="1" placeholder="VD: 5" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="equipmentLocation">Nơi Đặt / Phòng *</label>
+                    <select id="equipmentLocation" required>
+                        <option value="">-- Chọn phòng --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="equipmentStatus">Tình Trạng *</label>
+                    <select id="equipmentStatus" required>
+                        <option value="Tốt">Tốt</option>
+                        <option value="Cần bảo trì">Cần bảo trì</option>
+                        <option value="Hỏng">Hỏng</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group full">
+                <div>
+                    <label for="equipmentNotes">Ghi Chú</label>
+                    <textarea id="equipmentNotes" rows="3" placeholder="Thêm thông tin chi tiết..."></textarea>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Thiết Bị</button>
+                <button type="reset" class="btn-secondary"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+
+        <h3 style="margin-top: 30px;">Danh Sách Thiết Bị</h3>
+        <div class="search-box">
+            <input type="text" id="searchEquipment" placeholder="Tìm kiếm theo tên, mã hoặc loại...">
+            <select id="filterStatus" style="flex: 0 1 200px;">
+                <option value="">-- Tất cả tình trạng --</option>
+                <option value="Tốt">Tốt</option>
+                <option value="Cần bảo trì">Cần bảo trì</option>
+                <option value="Hỏng">Hỏng</option>
+            </select>
+            <button class="btn-primary" onclick="exportEquipmentToExcel()"><i class="fas fa-download"></i> Xuất Excel</button>
+            <button class="btn-secondary" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i> Nhập Excel</button>
+            <input type="file" id="importFile" accept=".xlsx,.xls" style="display: none;" onchange="importEquipmentFromExcel()">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Tên Thiết Bị</th>
+                    <th>Loại</th>
+                    <th>Số Lượng</th>
+                    <th>Nơi Đặt</th>
+                    <th>Tình Trạng</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="equipmentTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: PHÒNG HỌC -->
+    <div id="rooms" class="tab-content">
+        <h2 class="section-title">Quản Lý Phòng Học</h2>
+        <p>Dữ liệu phòng được lấy từ Cơ Sở Vật Chất Phòng - O</p>
+        
+        <div class="search-box">
+            <input type="text" id="searchRoom" placeholder="Tìm kiếm phòng...">
+            <button class="btn-primary" onclick="exportRoomsToExcel()"><i class="fas fa-download"></i> Xuất Excel</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Phòng</th>
+                    <th>Giáo Viên Phụ Trách</th>
+                    <th>Sĩ Số</th>
+                    <th>Số Thiết Bị</th>
+                    <th>Tình Trạng</th>
+                </tr>
+            </thead>
+            <tbody id="roomsTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: BẢO TRÌ -->
+    <div id="maintenance" class="tab-content">
+        <h2 class="section-title">Quản Lý Bảo Trì</h2>
+        
+        <h3>Ghi Nhận Bảo Trì</h3>
+        <form id="maintenanceForm">
+            <div class="form-group">
+                <div>
+                    <label for="maintenanceEquipment">Chọn Thiết Bị *</label>
+                    <select id="maintenanceEquipment" required>
+                        <option value="">-- Chọn thiết bị --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="maintenanceDate">Ngày Bảo Trì *</label>
+                    <input type="date" id="maintenanceDate" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="maintenanceType">Loại Bảo Trì *</label>
+                    <select id="maintenanceType" required>
+                        <option value="">-- Chọn loại --</option>
+                        <option value="Vệ sinh">Vệ sinh</option>
+                        <option value="Bảo dưỡng">Bảo dưỡng</option>
+                        <option value="Sửa chữa">Sửa chữa</option>
+                        <option value="Thay thế">Thay thế</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="maintenancePerson">Người Thực Hiện *</label>
+                    <input type="text" id="maintenancePerson" placeholder="Nhập tên" required>
+                </div>
+            </div>
+            <div class="form-group full">
+                <div>
+                    <label for="maintenanceNotes">Mô Tả Chi Tiết</label>
+                    <textarea id="maintenanceNotes" rows="3" placeholder="Mô tả công việc bảo trì..."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Ghi Nhận Bảo Trì</button>
+        </form>
+
+        <h3 style="margin-top: 30px;">Lịch Sử Bảo Trì</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Thiết Bị</th>
+                    <th>Ngày Bảo Trì</th>
+                    <th>Loại Bảo Trì</th>
+                    <th>Người Thực Hiện</th>
+                    <th>Ghi Chú</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="maintenanceTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: BÁO CÁO -->
+    <div id="report" class="tab-content">
+        <h2 class="section-title">Báo Cáo & Thống Kê</h2>
+        
+        <div class="button-group">
+            <button class="btn-primary" onclick="generateReport()"><i class="fas fa-sync"></i> Cập Nhật Báo Cáo</button>
+            <button class="btn-secondary" onclick="exportReportToExcel()"><i class="fas fa-download"></i> Xuất Báo Cáo</button>
+        </div>
+
+        <h3>Thống Kê Thiết Bị Theo Loại</h3>
+        <table id="reportByType">
+            <thead>
+                <tr>
+                    <th>Loại Thiết Bị</th>
+                    <th>Tốt</th>
+                    <th>Cần Bảo Trì</th>
+                    <th>Hỏng</th>
+                    <th>Tổng</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableByType"></tbody>
+        </table>
+
+        <h3>Thống Kê Thiết Bị Theo Phòng</h3>
+        <table id="reportByRoom">
+            <thead>
+                <tr>
+                    <th>Phòng</th>
+                    <th>Tốt</th>
+                    <th>Cần Bảo Trì</th>
+                    <th>Hỏng</th>
+                    <th>Tổng</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableByRoom"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // INITIALIZATION
+    let equipment = [];
+    let maintenance = [];
+    let rooms = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        loadRoomsList();
+        populateLocationSelect();
+        populateMaintenanceEquipmentSelect();
+        updateDashboard();
+        renderEquipmentTable();
+        renderRoomsTable();
+        renderMaintenanceTable();
+        setTodayDate();
+
+        // Event listeners
+        document.getElementById('equipmentForm').addEventListener('submit', saveEquipment);
+        document.getElementById('maintenanceForm').addEventListener('submit', saveMaintenanceRecord);
+        document.getElementById('searchEquipment').addEventListener('input', renderEquipmentTable);
+        document.getElementById('filterStatus').addEventListener('change', renderEquipmentTable);
+        document.getElementById('searchRoom').addEventListener('input', renderRoomsTable);
+    });
+
+    // ==================== DATA MANAGEMENT ====================
+    function loadData() {
+        equipment = JSON.parse(localStorage.getItem('equipment') || '[]');
+        maintenance = JSON.parse(localStorage.getItem('maintenance') || '[]');
+    }
+
+    function saveData() {
+        localStorage.setItem('equipment', JSON.stringify(equipment));
+        localStorage.setItem('maintenance', JSON.stringify(maintenance));
+    }
+
+    function loadRoomsList() {
+        rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+    }
+
+    function setTodayDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('maintenanceDate').value = today;
+    }
+
+    function showMessage(message, type = 'success') {
+        const messageBox = document.getElementById('messageBox');
+        messageBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        messageBox.style.display = 'block';
+        setTimeout(() => { messageBox.style.display = 'none'; }, 3000);
+    }
+
+    // ==================== EQUIPMENT MANAGEMENT ====================
+    function saveEquipment(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('equipmentId').value.trim();
+        const name = document.getElementById('equipmentName').value.trim();
+        const type = document.getElementById('equipmentType').value;
+        const quantity = parseInt(document.getElementById('equipmentQuantity').value);
+        const location = document.getElementById('equipmentLocation').value;
+        const status = document.getElementById('equipmentStatus').value;
+        const notes = document.getElementById('equipmentNotes').value;
+
+        if (!id || !name) {
+            showMessage('Vui lòng nhập đầy đủ thông tin bắt buộc!', 'error');
+            return;
+        }
+
+        const existingIndex = equipment.findIndex(e => e.id === id);
+        
+        if (existingIndex >= 0) {
+            equipment[existingIndex] = { id, name, type, quantity, location, status, notes, updatedAt: new Date().toLocaleDateString('vi-VN') };
+        } else {
+            equipment.push({ id, name, type, quantity, location, status, notes, createdAt: new Date().toLocaleDateString('vi-VN') });
+        }
+
+        saveData();
+        document.getElementById('equipmentForm').reset();
+        renderEquipmentTable();
+        updateDashboard();
+        showMessage(existingIndex >= 0 ? 'Cập nhật thiết bị thành công!' : 'Thêm thiết bị thành công!');
+    }
+
+    function deleteEquipment(id) {
+        if (confirm('Bạn chắc chắn muốn xóa?')) {
+            equipment = equipment.filter(e => e.id !== id);
+            saveData();
+            renderEquipmentTable();
+            updateDashboard();
+            showMessage('Xóa thiết bị thành công!');
+        }
+    }
+
+    function editEquipment(id) {
+        const eq = equipment.find(e => e.id === id);
+        if (eq) {
+            document.getElementById('equipmentId').value = eq.id;
+            document.getElementById('equipmentName').value = eq.name;
+            document.getElementById('equipmentType').value = eq.type;
+            document.getElementById('equipmentQuantity').value = eq.quantity;
+            document.getElementById('equipmentLocation').value = eq.location;
+            document.getElementById('equipmentStatus').value = eq.status;
+            document.getElementById('equipmentNotes').value = eq.notes || '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function renderEquipmentTable() {
+        const search = document.getElementById('searchEquipment').value.toLowerCase();
+        const filterStatus = document.getElementById('filterStatus').value;
+        
+        let filtered = equipment.filter(e => {
+            const matchSearch = e.id.toLowerCase().includes(search) || 
+                              e.name.toLowerCase().includes(search) ||
+                              e.type.toLowerCase().includes(search);
+            const matchStatus = !filterStatus || e.status === filterStatus;
+            return matchSearch && matchStatus;
+        });
+
+        const tbody = document.getElementById('equipmentTable');
+        tbody.innerHTML = filtered.map(e => `
+            <tr>
+                <td><strong>${e.id}</strong></td>
+                <td>${e.name}</td>
+                <td>${e.type}</td>
+                <td>${e.quantity}</td>
+                <td>${e.location}</td>
+                <td><span class="status-badge status-${e.status === 'Tốt' ? 'good' : e.status === 'Cần bảo trì' ? 'warning' : 'danger'}">${e.status}</span></td>
+                <td>
+                    <button class="action-btn btn-secondary" onclick="editEquipment('${e.id}')"><i class="fas fa-edit"></i> Sửa</button>
+                    <button class="action-btn btn-danger" onclick="deleteEquipment('${e.id}')"><i class="fas fa-trash"></i> Xóa</button>
+                </td>
+            </tr>
+        `).join('');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Không có dữ liệu</td></tr>';
+        }
+    }
+
+    // ==================== ROOMS MANAGEMENT ====================
+    function populateLocationSelect() {
+        const select = document.getElementById('equipmentLocation');
+        select.innerHTML = '<option value="">-- Chọn phòng --</option>';
+        rooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.roomName;
+            option.textContent = room.roomName;
+            select.appendChild(option);
+        });
+    }
+
+    function renderRoomsTable() {
+        const search = document.getElementById('searchRoom').value.toLowerCase();
+        
+        let filtered = rooms.filter(r => 
+            r.roomName.toLowerCase().includes(search) || 
+            r.teacherName.toLowerCase().includes(search)
+        );
+
+        const tbody = document.getElementById('roomsTable');
+        tbody.innerHTML = filtered.map(r => {
+            const eqCount = equipment.filter(e => e.location === r.roomName).length;
+            const eqGood = equipment.filter(e => e.location === r.roomName && e.status === 'Tốt').length;
+            const status = eqGood === eqCount ? '✅ Tốt' : '⚠️ Cần kiểm tra';
+            
+            return `
+                <tr>
+                    <td><strong>${r.roomName}</strong></td>
+                    <td>${r.teacherName}</td>
+                    <td>${r.currentCount}</td>
+                    <td>${eqCount}</td>
+                    <td>${status}</td>
+                </tr>
+            `;
+        }).join('');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Không có dữ liệu</td></tr>';
+        }
+    }
+
+    // ==================== MAINTENANCE ====================
+    function populateMaintenanceEquipmentSelect() {
+        const select = document.getElementById('maintenanceEquipment');
+        select.innerHTML = '<option value="">-- Chọn thiết bị --</option>';
+        equipment.forEach(e => {
+            const option = document.createElement('option');
+            option.value = e.id;
+            option.textContent = `${e.id} - ${e.name}`;
+            select.appendChild(option);
+        });
+    }
+
+    function saveMaintenanceRecord(e) {
+        e.preventDefault();
+
+        const equipmentId = document.getElementById('maintenanceEquipment').value;
+        const date = document.getElementById('maintenanceDate').value;
+        const type = document.getElementById('maintenanceType').value;
+        const person = document.getElementById('maintenancePerson').value;
+        const notes = document.getElementById('maintenanceNotes').value;
+
+        if (!equipmentId) {
+            showMessage('Vui lòng chọn thiết bị!', 'error');
+            return;
+        }
+
+        maintenance.push({
+            id: 'MT' + Date.now(),
+            equipmentId,
+            date,
+            type,
+            person,
+            notes,
+            createdAt: new Date().toLocaleDateString('vi-VN')
+        });
+
+        saveData();
+        document.getElementById('maintenanceForm').reset();
+        setTodayDate();
+        renderMaintenanceTable();
+        showMessage('Lưu ghi nhận bảo trì thành công!');
+    }
+
+    function deleteMaintenanceRecord(id) {
+        if (confirm('Xóa ghi nhận này?')) {
+            maintenance = maintenance.filter(m => m.id !== id);
+            saveData();
+            renderMaintenanceTable();
+            showMessage('Xóa ghi nhận thành công!');
+        }
+    }
+
+    function renderMaintenanceTable() {
+        const tbody = document.getElementById('maintenanceTable');
+        tbody.innerHTML = maintenance.sort((a, b) => new Date(b.date) - new Date(a.date)).map(m => {
+            const eq = equipment.find(e => e.id === m.equipmentId);
+            return `
+                <tr>
+                    <td>${eq ? eq.name : m.equipmentId}</td>
+                    <td>${m.date}</td>
+                    <td>${m.type}</td>
+                    <td>${m.person}</td>
+                    <td>${m.notes}</td>
+                    <td><button class="action-btn btn-danger" onclick="deleteMaintenanceRecord('${m.id}')"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+        }).join('');
+
+        if (maintenance.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Chưa có ghi nhận</td></tr>';
+        }
+    }
+
+    // ==================== DASHBOARD ====================
+    function updateDashboard() {
+        const total = equipment.length;
+        const good = equipment.filter(e => e.status === 'Tốt').length;
+        const maintenance_count = equipment.filter(e => e.status === 'Cần bảo trì').length;
+        const bad = equipment.filter(e => e.status === 'Hỏng').length;
+
+        document.getElementById('totalEquipment').textContent = total;
+        document.getElementById('equipmentGood').textContent = good;
+        document.getElementById('equipmentMaintenance').textContent = maintenance_count;
+        document.getElementById('equipmentBad').textContent = bad;
+
+        const alertEquipmentTable = document.getElementById('alertEquipmentTable');
+        const alertEquipment = equipment.filter(e => e.status !== 'Tốt');
+        alertEquipmentTable.innerHTML = alertEquipment.map(e => `
+            <tr>
+                <td><strong>${e.id}</strong></td>
+                <td>${e.name}</td>
+                <td>${e.type}</td>
+                <td><span class="status-badge status-${e.status === 'Cần bảo trì' ? 'warning' : 'danger'}">${e.status}</span></td>
+                <td>${e.location}</td>
+            </tr>
+        `).join('');
+
+        if (alertEquipment.length === 0) {
+            alertEquipmentTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #2E7D32;">✅ Tất cả thiết bị đều hoạt động tốt!</td></tr>';
+        }
+    }
+
+    // ==================== EXCEL EXPORT/IMPORT ====================
+    function exportEquipmentToExcel() {
+        const ws = XLSX.utils.json_to_sheet(equipment.map(e => ({
+            'Mã': e.id,
+            'Tên': e.name,
+            'Loại': e.type,
+            'Số Lượng': e.quantity,
+            'Nơi Đặt': e.location,
+            'Tình Trạng': e.status,
+            'Ghi Chú': e.notes || ''
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Thiết Bị');
+        XLSX.writeFile(wb, `thiet-bi-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+    }
+
+    function importEquipmentFromExcel() {
+        const file = document.getElementById('importFile').files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const ws = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(ws);
+
+                rows.forEach(row => {
+                    const existing = equipment.find(eq => eq.id === row['Mã']);
+                    if (!existing) {
+                        equipment.push({
+                            id: row['Mã'],
+                            name: row['Tên'],
+                            type: row['Loại'],
+                            quantity: row['Số Lượng'],
+                            location: row['Nơi Đặt'],
+                            status: row['Tình Trạng'],
+                            notes: row['Ghi Chú'] || ''
+                        });
+                    }
+                });
+
+                saveData();
+                renderEquipmentTable();
+                updateDashboard();
+                populateMaintenanceEquipmentSelect();
+                showMessage(`Đã nhập ${rows.length} mục!`);
+            } catch (error) {
+                showMessage('Lỗi khi nhập file: ' + error.message, 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function exportRoomsToExcel() {
+        const ws = XLSX.utils.json_to_sheet(rooms.map(r => ({
+            'Phòng': r.roomName,
+            'Giáo Viên': r.teacherName,
+            'Sĩ Số': r.currentCount,
+            'Số Thiết Bị': equipment.filter(e => e.location === r.roomName).length
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Phòng Học');
+        XLSX.writeFile(wb, `phong-hoc-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+    }
+
+    // ==================== REPORT ====================
+    function generateReport() {
+        const reportByType = {};
+        const reportByRoom = {};
+
+        equipment.forEach(e => {
+            if (!reportByType[e.type]) reportByType[e.type] = { good: 0, maintenance: 0, bad: 0 };
+            if (!reportByRoom[e.location]) reportByRoom[e.location] = { good: 0, maintenance: 0, bad: 0 };
+
+            if (e.status === 'Tốt') {
+                reportByType[e.type].good += e.quantity;
+                reportByRoom[e.location].good += e.quantity;
+            } else if (e.status === 'Cần bảo trì') {
+                reportByType[e.type].maintenance += e.quantity;
+                reportByRoom[e.location].maintenance += e.quantity;
+            } else {
+                reportByType[e.type].bad += e.quantity;
+                reportByRoom[e.location].bad += e.quantity;
+            }
+        });
+
+        const typeTable = document.getElementById('reportTableByType');
+        typeTable.innerHTML = Object.entries(reportByType).map(([type, data]) => `
+            <tr>
+                <td>${type}</td>
+                <td>${data.good}</td>
+                <td>${data.maintenance}</td>
+                <td>${data.bad}</td>
+                <td>${data.good + data.maintenance + data.bad}</td>
+            </tr>
+        `).join('');
+
+        const roomTable = document.getElementById('reportTableByRoom');
+        roomTable.innerHTML = Object.entries(reportByRoom).map(([room, data]) => `
+            <tr>
+                <td>${room}</td>
+                <td>${data.good}</td>
+                <td>${data.maintenance}</td>
+                <td>${data.bad}</td>
+                <td>${data.good + data.maintenance + data.bad}</td>
+            </tr>
+        `).join('');
+
+        showMessage('Báo cáo đã được cập nhật!');
+    }
+
+    function exportReportToExcel() {
+        const ws = XLSX.utils.table_to_sheet(document.getElementById('reportByType'));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo');
+        XLSX.writeFile(wb, `bao-cao-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+    }
+
+    // ==================== TAB SWITCHING ====================
+    function switchTab(btn, tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+
+        if (tabName === 'report') generateReport();
+    }
+</script>
+
+</body>
+</html>

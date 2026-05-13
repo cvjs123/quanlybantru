@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm Thực Tồn Kho</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: #eeeeee;
+        }
+
+        .tab-btn.active {
+            color: #ff9800;
+            border-bottom-color: #ff9800;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            color: #ff9800;
+            border-bottom: 2px solid #ff9800;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388e3c;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: #ff9800;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin-right: 5px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff9800;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-new {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-approved {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-reject {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .discrepancy-good {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .discrepancy-warning {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+
+        .discrepancy-danger {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ff9800;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .alert-error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .inventory-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .inventory-item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 12px 15px;
+                font-size: 0.85rem;
+            }
+
+            .inventory-item-row {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <h1><i class="fas fa-boxes-stacked"></i> KIỂM THỰC TỒN KHO</h1>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'dashboard')">
+            <i class="fas fa-chart-pie"></i> Tổng Quan
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'newInventory')">
+            <i class="fas fa-plus-circle"></i> Lập Phiếu Kiểm Kê
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'inventory')">
+            <i class="fas fa-list"></i> Danh Sách Phiếu
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'report')">
+            <i class="fas fa-file-pdf"></i> Báo Cáo Chênh Lệch
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'history')">
+            <i class="fas fa-history"></i> Lịch Sử
+        </button>
+    </div>
+
+    <!-- TAB: TỔNG QUAN -->
+    <div id="dashboard" class="tab-content active">
+        <h2 class="section-title">Tổng Quan Kiểm Thực</h2>
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Tổng Phiếu Kiểm Kê</h3>
+                <div class="number" id="totalForms">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Phiếu Mới</h3>
+                <div class="number" id="newForms">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Đã Duyệt</h3>
+                <div class="number" id="approvedForms">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Có Chênh Lệch</h3>
+                <div class="number" id="discrepancyForms">0</div>
+            </div>
+        </div>
+
+        <h3>Các Mặt Hàng Có Chênh Lệch Lớn</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Phiếu Số</th>
+                    <th>Ngày Kiểm Kê</th>
+                    <th>Mặt Hàng</th>
+                    <th>Lý Thuyết / Thực Tế</th>
+                    <th>Chênh Lệch</th>
+                </tr>
+            </thead>
+            <tbody id="alertDiscrepancyTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: LẬP PHIẾU KIỂM KÊ -->
+    <div id="newInventory" class="tab-content">
+        <h2 class="section-title">Lập Phiếu Kiểm Kê Tồn Kho</h2>
+
+        <div id="messageBox" style="display: none;"></div>
+
+        <form id="inventoryForm">
+            <div class="form-group">
+                <div>
+                    <label for="formId">Số Phiếu *</label>
+                    <input type="text" id="formId" placeholder="VD: KT20260513001" required>
+                </div>
+                <div>
+                    <label for="formDate">Ngày Kiểm Kê *</label>
+                    <input type="date" id="formDate" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div>
+                    <label for="formLocation">Nơi Kiểm Kê *</label>
+                    <input type="text" id="formLocation" placeholder="VD: Kho 1, Phòng Ăn, v.v." required>
+                </div>
+                <div>
+                    <label for="formStaff">Nhân Viên Kiểm Kê *</label>
+                    <input type="text" id="formStaff" placeholder="Tên nhân viên" required>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">Danh Sách Mặt Hàng</h3>
+            <div id="itemsContainer"></div>
+
+            <button type="button" class="btn-secondary" onclick="addInventoryItem()"><i class="fas fa-plus"></i> Thêm Mặt Hàng</button>
+
+            <div class="button-group" style="margin-top: 30px;">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Phiếu</button>
+                <button type="button" class="btn-secondary" onclick="resetInventoryForm()"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- TAB: DANH SÁCH PHIẾU -->
+    <div id="inventory" class="tab-content">
+        <h2 class="section-title">Danh Sách Phiếu Kiểm Kê</h2>
+
+        <div class="search-box">
+            <input type="text" id="searchForm" placeholder="Tìm kiếm phiếu...">
+            <select id="filterStatus" style="flex: 0 1 200px;">
+                <option value="">-- Tất cả trạng thái --</option>
+                <option value="Mới">Mới</option>
+                <option value="Đã duyệt">Đã duyệt</option>
+                <option value="Từ chối">Từ chối</option>
+            </select>
+            <button class="btn-primary" onclick="exportFormsToExcel()"><i class="fas fa-download"></i> Xuất Excel</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Số Phiếu</th>
+                    <th>Ngày Kiểm Kê</th>
+                    <th>Nơi</th>
+                    <th>Nhân Viên</th>
+                    <th>Trạng Thái</th>
+                    <th>Số Mặt Hàng</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="formsTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: BÁO CÁO CHÊNH LỆCH -->
+    <div id="report" class="tab-content">
+        <h2 class="section-title">Báo Cáo Chênh Lệch Tồn Kho</h2>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="generateDiscrepancyReport()"><i class="fas fa-sync"></i> Cập Nhật Báo Cáo</button>
+            <button class="btn-secondary" onclick="exportReportToExcel()"><i class="fas fa-download"></i> Xuất Báo Cáo</button>
+        </div>
+
+        <h3>Danh Sách Chênh Lệch</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Phiếu Số</th>
+                    <th>Ngày Kiểm Kê</th>
+                    <th>Mặt Hàng</th>
+                    <th>Lý Thuyết</th>
+                    <th>Thực Tế</th>
+                    <th>Chênh Lệch</th>
+                    <th>Loại</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody id="discrepancyTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: LỊCH SỬ -->
+    <div id="history" class="tab-content">
+        <h2 class="section-title">Lịch Sử Kiểm Kê</h2>
+
+        <div class="search-box">
+            <input type="text" id="searchHistory" placeholder="Tìm kiếm...">
+            <select id="filterMonth" style="flex: 0 1 200px;">
+                <option value="">-- Tất cả tháng --</option>
+                <option value="1">Tháng 1</option>
+                <option value="2">Tháng 2</option>
+                <option value="3">Tháng 3</option>
+                <option value="4">Tháng 4</option>
+                <option value="5">Tháng 5</option>
+                <option value="6">Tháng 6</option>
+                <option value="7">Tháng 7</option>
+                <option value="8">Tháng 8</option>
+                <option value="9">Tháng 9</option>
+                <option value="10">Tháng 10</option>
+                <option value="11">Tháng 11</option>
+                <option value="12">Tháng 12</option>
+            </select>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Phiếu Số</th>
+                    <th>Ngày Kiểm Kê</th>
+                    <th>Nơi</th>
+                    <th>Nhân Viên</th>
+                    <th>Trạng Thái</th>
+                    <th>Người Duyệt</th>
+                    <th>Ngày Duyệt</th>
+                </tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL: XEM CHI TIẾT PHIẾU -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            Chi Tiết Phiếu Kiểm Kê
+        </div>
+        <div id="modalBody"></div>
+        <div class="button-group" style="margin-top: 20px;">
+            <button class="btn-success" onclick="approveForm()"><i class="fas fa-check"></i> Phê Duyệt</button>
+            <button class="btn-danger" onclick="rejectForm()"><i class="fas fa-times"></i> Từ Chối</button>
+            <button class="btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // INITIALIZATION
+    let forms = [];
+    let currentFormId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        setTodayDate();
+        generateFormId();
+        addInventoryItem();
+        updateDashboard();
+        renderFormsTable();
+        renderHistoryTable();
+
+        document.getElementById('inventoryForm').addEventListener('submit', saveForm);
+        document.getElementById('searchForm').addEventListener('input', renderFormsTable);
+        document.getElementById('filterStatus').addEventListener('change', renderFormsTable);
+        document.getElementById('searchHistory').addEventListener('input', renderHistoryTable);
+        document.getElementById('filterMonth').addEventListener('change', renderHistoryTable);
+    });
+
+    // ==================== DATA MANAGEMENT ====================
+    function loadData() {
+        forms = JSON.parse(localStorage.getItem('inventoryForms') || '[]');
+    }
+
+    function saveData() {
+        localStorage.setItem('inventoryForms', JSON.stringify(forms));
+    }
+
+    function setTodayDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('formDate').value = today;
+    }
+
+    function generateFormId() {
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const count = forms.filter(f => f.id.includes(dateStr)).length + 1;
+        document.getElementById('formId').value = `KT${dateStr}${String(count).padStart(3, '0')}`;
+    }
+
+    function showMessage(message, type = 'success') {
+        const messageBox = document.getElementById('messageBox');
+        messageBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        messageBox.style.display = 'block';
+        setTimeout(() => { messageBox.style.display = 'none'; }, 3000);
+    }
+
+    // ==================== INVENTORY ITEMS ====================
+    function addInventoryItem() {
+        const container = document.getElementById('itemsContainer');
+        const itemCount = container.children.length;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'inventory-item';
+        itemDiv.innerHTML = `
+            <div class="inventory-item-row">
+                <div>
+                    <label>Tên Mặt Hàng *</label>
+                    <input type="text" class="itemName" placeholder="VD: Gạo" required>
+                </div>
+                <div>
+                    <label>Lý Thuyết (tồn kho cũ) *</label>
+                    <input type="number" class="itemTheory" placeholder="0" required>
+                </div>
+                <div>
+                    <label>Thực Tế (kiểm kê) *</label>
+                    <input type="number" class="itemActual" placeholder="0" required>
+                </div>
+                <div>
+                    <label>Đơn Vị</label>
+                    <select class="itemUnit">
+                        <option>kg</option>
+                        <option>lít</option>
+                        <option>cái</option>
+                        <option>hộp</option>
+                        <option>túi</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Ghi Chú</label>
+                <textarea class="itemNotes" rows="2" placeholder="Ghi chú về mặt hàng này..."></textarea>
+            </div>
+            <button type="button" class="btn-danger action-btn" onclick="removeInventoryItem(this)" style="margin-top: 10px;"><i class="fas fa-trash"></i> Xóa</button>
+        `;
+        container.appendChild(itemDiv);
+    }
+
+    function removeInventoryItem(btn) {
+        btn.closest('.inventory-item').remove();
+    }
+
+    // ==================== FORM MANAGEMENT ====================
+    function saveForm(e) {
+        e.preventDefault();
+
+        const formId = document.getElementById('formId').value.trim();
+        const formDate = document.getElementById('formDate').value;
+        const formLocation = document.getElementById('formLocation').value.trim();
+        const formStaff = document.getElementById('formStaff').value.trim();
+
+        const items = [];
+        document.querySelectorAll('.inventory-item').forEach(item => {
+            const name = item.querySelector('.itemName').value;
+            const theory = parseInt(item.querySelector('.itemTheory').value) || 0;
+            const actual = parseInt(item.querySelector('.itemActual').value) || 0;
+            const unit = item.querySelector('.itemUnit').value;
+            const notes = item.querySelector('.itemNotes').value;
+            
+            if (name) {
+                items.push({ name, theory, actual, unit, notes });
+            }
+        });
+
+        if (!formId || !formDate || !formLocation || !formStaff || items.length === 0) {
+            showMessage('Vui lòng nhập đầy đủ thông tin!', 'error');
+            return;
+        }
+
+        const newForm = {
+            id: formId,
+            date: formDate,
+            location: formLocation,
+            staff: formStaff,
+            items,
+            status: 'Mới',
+            createdAt: new Date().toLocaleDateString('vi-VN'),
+            approver: '',
+            approvedAt: '',
+            notes: ''
+        };
+
+        forms.push(newForm);
+        saveData();
+        document.getElementById('inventoryForm').reset();
+        setTodayDate();
+        generateFormId();
+        document.getElementById('itemsContainer').innerHTML = '';
+        addInventoryItem();
+        updateDashboard();
+        renderFormsTable();
+        showMessage('Lưu phiếu kiểm kê thành công!');
+    }
+
+    function deleteForm(id) {
+        if (confirm('Bạn chắc chắn muốn xóa phiếu này?')) {
+            forms = forms.filter(f => f.id !== id);
+            saveData();
+            updateDashboard();
+            renderFormsTable();
+            showMessage('Xóa phiếu thành công!');
+        }
+    }
+
+    function editForm(id) {
+        const form = forms.find(f => f.id === id);
+        if (!form) return;
+
+        document.getElementById('formId').value = form.id;
+        document.getElementById('formDate').value = form.date;
+        document.getElementById('formLocation').value = form.location;
+        document.getElementById('formStaff').value = form.staff;
+
+        document.getElementById('itemsContainer').innerHTML = '';
+        form.items.forEach(item => {
+            addInventoryItem();
+        });
+
+        document.querySelectorAll('.inventory-item').forEach((itemDiv, index) => {
+            if (form.items[index]) {
+                itemDiv.querySelector('.itemName').value = form.items[index].name;
+                itemDiv.querySelector('.itemTheory').value = form.items[index].theory;
+                itemDiv.querySelector('.itemActual').value = form.items[index].actual;
+                itemDiv.querySelector('.itemUnit').value = form.items[index].unit;
+                itemDiv.querySelector('.itemNotes').value = form.items[index].notes;
+            }
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetInventoryForm() {
+        document.getElementById('inventoryForm').reset();
+        setTodayDate();
+        generateFormId();
+        document.getElementById('itemsContainer').innerHTML = '';
+        addInventoryItem();
+    }
+
+    function renderFormsTable() {
+        const search = document.getElementById('searchForm').value.toLowerCase();
+        const filterStatus = document.getElementById('filterStatus').value;
+
+        let filtered = forms.filter(f => {
+            const matchSearch = f.id.toLowerCase().includes(search) || 
+                              f.location.toLowerCase().includes(search) ||
+                              f.staff.toLowerCase().includes(search);
+            const matchStatus = !filterStatus || f.status === filterStatus;
+            return matchSearch && matchStatus;
+        });
+
+        const tbody = document.getElementById('formsTable');
+        tbody.innerHTML = filtered.map(f => `
+            <tr>
+                <td><strong>${f.id}</strong></td>
+                <td>${f.date}</td>
+                <td>${f.location}</td>
+                <td>${f.staff}</td>
+                <td><span class="status-badge status-${f.status === 'Mới' ? 'new' : f.status === 'Đã duyệt' ? 'approved' : 'reject'}">${f.status}</span></td>
+                <td>${f.items.length}</td>
+                <td>
+                    <button class="action-btn btn-secondary" onclick="viewFormDetail('${f.id}')"><i class="fas fa-eye"></i> Xem</button>
+                    ${f.status === 'Mới' ? `<button class="action-btn btn-secondary" onclick="editForm('${f.id}')"><i class="fas fa-edit"></i> Sửa</button>` : ''}
+                    <button class="action-btn btn-danger" onclick="deleteForm('${f.id}')"><i class="fas fa-trash"></i> Xóa</button>
+                </td>
+            </tr>
+        `).join('');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Không có dữ liệu</td></tr>';
+        }
+    }
+
+    // ==================== DETAIL MODAL ====================
+    function viewFormDetail(id) {
+        currentFormId = id;
+        const form = forms.find(f => f.id === id);
+        if (!form) return;
+
+        const discrepancies = form.items.filter(item => item.theory !== item.actual);
+        const html = `
+            <div style="margin-bottom: 20px;">
+                <p><strong>Số Phiếu:</strong> ${form.id}</p>
+                <p><strong>Ngày:</strong> ${form.date}</p>
+                <p><strong>Nơi:</strong> ${form.location}</p>
+                <p><strong>Nhân Viên:</strong> ${form.staff}</p>
+                <p><strong>Trạng Thái:</strong> <span class="status-badge status-${form.status === 'Mới' ? 'new' : form.status === 'Đã duyệt' ? 'approved' : 'reject'}">${form.status}</span></p>
+                ${form.approver ? `<p><strong>Người Duyệt:</strong> ${form.approver} (${form.approvedAt})</p>` : ''}
+            </div>
+
+            <h4>Chi Tiết Mặt Hàng</h4>
+            <table style="font-size: 0.9rem;">
+                <thead>
+                    <tr>
+                        <th>Mặt Hàng</th>
+                        <th>Lý Thuyết</th>
+                        <th>Thực Tế</th>
+                        <th>Chênh Lệch</th>
+                        <th>Đơn Vị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${form.items.map(item => {
+                        const diff = item.actual - item.theory;
+                        const status = diff === 0 ? 'good' : diff > 0 ? 'warning' : 'danger';
+                        return `<tr>
+                            <td>${item.name}</td>
+                            <td>${item.theory}</td>
+                            <td>${item.actual}</td>
+                            <td><span class="status-badge discrepancy-${status}">${diff > 0 ? '+' : ''}${diff}</span></td>
+                            <td>${item.unit}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+
+            ${discrepancies.length > 0 ? `
+                <h4 style="margin-top: 20px; color: #f57c00;">Các Mặt Hàng Có Chênh Lệch</h4>
+                ${discrepancies.map(item => `
+                    <div class="inventory-item">
+                        <strong>${item.name}</strong>: Lý thuyết ${item.theory} ${item.unit}, thực tế ${item.actual} ${item.unit} 
+                        (${item.actual > item.theory ? '+' : ''}${item.actual - item.theory} ${item.unit})
+                        ${item.notes ? `<br><small>Ghi chú: ${item.notes}</small>` : ''}
+                    </div>
+                `).join('')}
+            ` : '<p style="color: #2e7d32;">✅ Tất cả mặt hàng đều khớp</p>'}
+        `;
+
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.remove('show');
+        currentFormId = null;
+    }
+
+    function approveForm() {
+        const form = forms.find(f => f.id === currentFormId);
+        if (form) {
+            form.status = 'Đã duyệt';
+            form.approver = prompt('Nhập tên người duyệt:') || 'Quản lý';
+            form.approvedAt = new Date().toLocaleDateString('vi-VN');
+            saveData();
+            updateDashboard();
+            renderFormsTable();
+            renderHistoryTable();
+            closeModal();
+            showMessage('Phê duyệt phiếu thành công!');
+        }
+    }
+
+    function rejectForm() {
+        const form = forms.find(f => f.id === currentFormId);
+        if (form) {
+            form.status = 'Từ chối';
+            form.approver = prompt('Nhập tên người từ chối:') || 'Quản lý';
+            form.approvedAt = new Date().toLocaleDateString('vi-VN');
+            form.notes = prompt('Lý do từ chối:') || '';
+            saveData();
+            updateDashboard();
+            renderFormsTable();
+            renderHistoryTable();
+            closeModal();
+            showMessage('Từ chối phiếu thành công!');
+        }
+    }
+
+    // ==================== DASHBOARD ====================
+    function updateDashboard() {
+        const total = forms.length;
+        const newCount = forms.filter(f => f.status === 'Mới').length;
+        const approvedCount = forms.filter(f => f.status === 'Đã duyệt').length;
+        
+        let discrepancyCount = 0;
+        forms.forEach(f => {
+            const hasDiscrepancy = f.items.some(item => item.theory !== item.actual);
+            if (hasDiscrepancy) discrepancyCount++;
+        });
+
+        document.getElementById('totalForms').textContent = total;
+        document.getElementById('newForms').textContent = newCount;
+        document.getElementById('approvedForms').textContent = approvedCount;
+        document.getElementById('discrepancyForms').textContent = discrepancyCount;
+
+        const alertTable = document.getElementById('alertDiscrepancyTable');
+        const alertItems = [];
+        forms.forEach(f => {
+            f.items.forEach(item => {
+                const diff = Math.abs(item.actual - item.theory);
+                if (diff > 0) {
+                    alertItems.push({ formId: f.id, date: f.date, item, diff, actual: item.actual, theory: item.theory });
+                }
+            });
+        });
+
+        alertItems.sort((a, b) => b.diff - a.diff);
+        alertTable.innerHTML = alertItems.slice(0, 10).map(a => `
+            <tr>
+                <td>${a.formId}</td>
+                <td>${a.date}</td>
+                <td>${a.item.name}</td>
+                <td>${a.theory} / ${a.actual}</td>
+                <td><span class="status-badge discrepancy-${a.diff > 5 ? 'danger' : 'warning'}">${a.actual > a.theory ? '+' : ''}${a.actual - a.theory}</span></td>
+            </tr>
+        `).join('');
+
+        if (alertItems.length === 0) {
+            alertTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #2e7d32;">✅ Không có chênh lệch</td></tr>';
+        }
+    }
+
+    // ==================== REPORT ====================
+    function generateDiscrepancyReport() {
+        const tbody = document.getElementById('discrepancyTable');
+        const discrepancies = [];
+
+        forms.forEach(f => {
+            f.items.forEach(item => {
+                if (item.theory !== item.actual) {
+                    discrepancies.push({
+                        formId: f.id,
+                        date: f.date,
+                        itemName: item.name,
+                        theory: item.theory,
+                        actual: item.actual,
+                        diff: item.actual - item.theory,
+                        type: item.actual > item.theory ? 'Thừa' : 'Thiếu',
+                        notes: item.notes
+                    });
+                }
+            });
+        });
+
+        tbody.innerHTML = discrepancies.map(d => `
+            <tr>
+                <td>${d.formId}</td>
+                <td>${d.date}</td>
+                <td>${d.itemName}</td>
+                <td>${d.theory}</td>
+                <td>${d.actual}</td>
+                <td><span class="status-badge discrepancy-${d.diff > 5 ? 'danger' : d.diff > 0 ? 'warning' : 'danger'}">${d.diff > 0 ? '+' : ''}${d.diff}</span></td>
+                <td><strong>${d.type}</strong></td>
+                <td>${d.notes}</td>
+            </tr>
+        `).join('');
+
+        if (discrepancies.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #2e7d32;">✅ Không có chênh lệch</td></tr>';
+        }
+
+        showMessage('Báo cáo đã được cập nhật!');
+    }
+
+    // ==================== HISTORY ====================
+    function renderHistoryTable() {
+        const search = document.getElementById('searchHistory').value.toLowerCase();
+        const filterMonth = document.getElementById('filterMonth').value;
+
+        let filtered = forms.filter(f => {
+            const matchSearch = f.id.toLowerCase().includes(search) || 
+                              f.location.toLowerCase().includes(search) ||
+                              f.staff.toLowerCase().includes(search);
+            
+            let matchMonth = true;
+            if (filterMonth) {
+                const month = new Date(f.date).getMonth() + 1;
+                matchMonth = month === parseInt(filterMonth);
+            }
+
+            return matchSearch && matchMonth && (f.status === 'Đã duyệt' || f.status === 'Từ chối');
+        });
+
+        const tbody = document.getElementById('historyTable');
+        tbody.innerHTML = filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).map(f => `
+            <tr>
+                <td>${f.id}</td>
+                <td>${f.date}</td>
+                <td>${f.location}</td>
+                <td>${f.staff}</td>
+                <td><span class="status-badge status-${f.status === 'Đã duyệt' ? 'approved' : 'reject'}">${f.status}</span></td>
+                <td>${f.approver}</td>
+                <td>${f.approvedAt}</td>
+            </tr>
+        `).join('');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Không có dữ liệu</td></tr>';
+        }
+    }
+
+    // ==================== EXCEL ====================
+    function exportFormsToExcel() {
+        const data = forms.map(f => ({
+            'Phiếu Số': f.id,
+            'Ngày': f.date,
+            'Nơi': f.location,
+            'Nhân Viên': f.staff,
+            'Trạng Thái': f.status,
+            'Số Mặt Hàng': f.items.length,
+            'Người Duyệt': f.approver || '',
+            'Ngày Duyệt': f.approvedAt || ''
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Phiếu Kiểm Kê');
+        XLSX.writeFile(wb, `phieu-kiem-ke-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+    }
+
+    function exportReportToExcel() {
+        generateDiscrepancyReport();
+        const table = document.getElementById('discrepancyTable');
+        const ws = XLSX.utils.table_to_sheet(table.closest('table'));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo Chênh Lệch');
+        XLSX.writeFile(wb, `bao-cao-chenlech-${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
+    }
+
+    // ==================== TAB SWITCHING ====================
+    function switchTab(btn, tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+
+        if (tabName === 'report') generateDiscrepancyReport();
+    }
+
+    window.onclick = (e) => {
+        const modal = document.getElementById('detailModal');
+        if (e.target === modal) closeModal();
+    };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Học Sinh - Hệ Thống Bán Trú</title>
+    <link rel="stylesheet" href="phong-o.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="auth-check.js"></script>
+    <style>
+        /* Additional styles for this page */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: #2E7D32;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 300px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-box.class-1A { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-box.class-2A { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-box.class-3A { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        
+        .stat-box h4 { font-size: 12px; opacity: 0.9; margin-bottom: 5px; }
+        .stat-box .number { font-size: 24px; font-weight: bold; }
+        .class-badge {
+            background: #e8f5e9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .signature-line {
+            font-weight: bold;
+        }
+        
+        /* Form nhập */
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section h3 {
+            color: #2E7D32;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .form-top {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .photo-card {
+            width: 220px;
+            min-width: 220px;
+            background: #fff;
+            border: 2px dashed #cfd8dc;
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .photo-card:hover {
+            border-color: #2E7D32;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 14px;
+            margin-bottom: 15px;
+            background: #f4f4f4;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-size: 14px;
+            border-radius: 14px;
+            background: #f4f4f4;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+
+        .form-group { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            flex: 1 1 0;
+        }
+        
+        input, select { 
+            padding: 12px 15px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            flex: 1; 
+            min-width: 150px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .photo-card input[type="file"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 5px rgba(46, 125, 50, 0.2);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button { 
+            border: none; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        button.btn-add { 
+            background: #2E7D32; 
+            color: white; 
+        }
+        
+        button.btn-add:hover { 
+            background: #1b5e20;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+        
+        button.btn-search {
+            background: #667eea;
+            color: white;
+        }
+        
+        button.btn-search:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        button.btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        button.btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        /* Search và Filter */
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-section input {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        /* Bảng danh sách */
+        .table-section {
+            overflow-x: auto;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        th { 
+            background-color: #2E7D32; 
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f0f0f0; }
+        
+        .btn-delete, .btn-edit { 
+            padding: 8px 12px; 
+            border: none;
+            cursor: pointer; 
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-right: 5px;
+        }
+        
+        .btn-delete { 
+            background: #ff4444; 
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+        
+        .btn-edit {
+            background: #ffa500;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #ff8c00;
+            transform: scale(1.05);
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 16px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        /* Toolbar với các nút chức năng */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #2E7D32;
+        }
+
+        button.btn-toolbar {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button.btn-add-new {
+            background: #2E7D32;
+            color: white;
+        }
+
+        button.btn-add-new:hover {
+            background: #1b5e20;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        button.btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+
+        button.btn-save:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        button.btn-delete-all {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        button.btn-delete-all:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        button.btn-import {
+            background: #2196F3;
+            color: white;
+        }
+
+        button.btn-import:hover {
+            background: #0b7dda;
+            transform: translateY(-2px);
+        }
+
+        button.btn-template {
+            background: #ff9800;
+            color: white;
+        }
+
+        button.btn-template:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+        }
+
+        button.btn-export {
+            background: #673AB7;
+            color: white;
+        }
+
+        button.btn-export:hover {
+            background: #5e35b1;
+            transform: translateY(-2px);
+        }
+
+        button.btn-print {
+            background: #795548;
+            color: white;
+        }
+
+        button.btn-print:hover {
+            background: #6d4c41;
+            transform: translateY(-2px);
+        }
+
+        #photoInput {
+            display: none;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #studentPhoto {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; align-items: flex-start; }
+            .form-group { flex-direction: column; }
+            input, select { min-width: 100%; }
+            table { font-size: 12px; }
+            th, td { padding: 8px; }
+            .toolbar { flex-direction: column; }
+            button.btn-toolbar { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <a href="index.html" class="back-btn">← Quay lại Trang Chủ</a>
+    </div>
+    
+    <div style="display: flex; justify-content: center; align-items: center; margin: 22px 0; width: 100%;">
+        <h2 style="text-transform: uppercase; margin: 0; color: #2E7D32; font-size: 48px;">👨‍🎓 Quản Lý Học Sinh Bán Trú</h2>
+    </div>
+
+    <div class="stats">
+        <div class="stat-box">
+            <h4>Tổng Học Sinh</h4>
+            <div class="number" id="totalStudents">0</div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3>➕ Thêm Học Sinh Mới</h3>
+        <div class="form-top">
+            <div class="photo-card" onclick="document.getElementById('photoInput').click()">
+                <div id="photoPreview" class="photo-placeholder">Ảnh học sinh<br>khu vực chọn ảnh</div>
+            </div>
+            <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(event)">
+            <input type="hidden" id="studentPhoto">
+            <div class="form-group">
+                <input type="text" id="studentID" placeholder="Mã học sinh (HS001)">
+                <input type="text" id="studentName" placeholder="Họ và tên">
+                <input type="date" id="studentDOB" placeholder="Ngày sinh">
+            </div>
+            <div class="form-group">
+                <input type="text" id="studentClass" placeholder="Lớp (6A, 6B, ...)">
+                <select id="studentGender" title="Chọn giới tính" aria-label="Chọn giới tính">
+                    <option value="">-- Chọn giới tính --</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                </select>
+                <select id="studentRoom" title="Chọn phòng ở" aria-label="Chọn phòng ở">
+                    <option value="">-- Chọn phòng --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" id="studentAddress" placeholder="Địa chỉ">
+                <input type="text" id="studentPhone" placeholder="SĐT gia đình">
+                <input type="text" id="studentParent" placeholder="Họ tên bố mẹ">
+            </div>
+        </div>
+        <div class="button-group">
+            <button type="button" id="btnAddStudent" class="btn-add">✓ Thêm Học Sinh</button>
+            <button type="button" id="btnClearForm" class="btn-clear">Xóa Trắng</button>
+            <button type="button" id="btnUpdateStudent" class="btn-template">✏️ Cập Nhật</button>
+            <button type="button" id="btnSave" class="btn-save">💾 Lưu</button>
+            <button type="button" id="btnImportExcel" class="btn-import">📥 Nhập File</button>
+            <button type="button" id="btnExportTemplate" class="btn-template">📄 Xuất Mẫu</button>
+            <button type="button" id="btnExportToExcel" class="btn-export">📤 Xuất File</button>
+            <button type="button" id="btnPrintList" class="btn-print">🖨️ In</button>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" aria-label="Chọn file để nhập">
+    </div>
+
+
+    <div class="search-section">
+        <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm theo tên, mã hoặc lớp...">
+        <button id="btnSearch" class="btn-search">Tìm Kiếm</button>
+        <button id="btnClearSearch" class="btn-clear">Xóa Bộ Lọc</button>
+    </div>
+
+    <div class="table-section">
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Mã HS</th>
+                    <th>Họ Tên</th>
+                    <th>Ngày Sinh</th>
+                    <th>Giới Tính</th>
+                    <th>Lớp</th>
+                    <th>Phòng</th>
+                    <th>Địa chỉ</th>
+                    <th>ĐT gia đình</th>
+                    <th>Họ tên bố mẹ</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="studentData">
+                <tr>
+                    <td colspan="11" class="empty-message">Chưa có học sinh nào. Vui lòng thêm mới!</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const channel = typeof BroadcastChannel !== 'undefined'
+        ? new BroadcastChannel('schoolDataUpdates')
+        : null;
+    let editingIndex = null;
+
+    window.onload = function() {
+        displayStudents();
+        updateStats();
+    };
+
+    function addStudent() {
+        const id = document.getElementById('studentID').value.trim();
+        const name = document.getElementById('studentName').value.trim();
+        const dob = document.getElementById('studentDOB').value;
+        const gender = document.getElementById('studentGender').value;
+        const sClass = document.getElementById('studentClass').value;
+        const room = document.getElementById('studentRoom').value.trim();
+        const address = document.getElementById('studentAddress').value.trim();
+        const phone = document.getElementById('studentPhone').value.trim();
+        const parent = document.getElementById('studentParent').value.trim();
+
+        if(!id || !name || !dob || !gender || !sClass || !room || !address || !phone || !parent) {
+            alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        const photo = document.getElementById('studentPhoto').value;
+        
+        // Kiểm tra mã học sinh đã tồn tại
+        if (editingIndex === null && students.some(s => s.id === id)) {
+            alert("⚠️ Mã học sinh này đã tồn tại!");
+            return;
+        }
+
+        const student = { id, name, dob, gender, sClass, room, address, phone, parent, photo };
+
+        if (editingIndex !== null) {
+            // Cập nhật học sinh
+            students[editingIndex] = student;
+            editingIndex = null;
+            alert("✓ Cập nhật học sinh thành công!");
+        } else {
+            // Thêm học sinh mới
+            students.push(student);
+            alert("✓ Thêm học sinh thành công!");
+        }
+
+        localStorage.setItem('students', JSON.stringify(students));
+        if (channel) channel.postMessage({ type: 'studentUpdated' });
+        clearForm();
+        displayStudents();
+        updateStats();
+    }
+
+    function displayStudents(filteredData = null) {
+        const studentData = document.getElementById('studentData');
+        const allStudents = JSON.parse(localStorage.getItem('students')) || [];
+        let students = filteredData || allStudents;
+
+        if (students.length === 0) {
+        document.getElementById('studentData').innerHTML = '<tr><td colspan="9" class="empty-message">Chưa có học sinh nào. Vui lòng thêm mới!</td></tr>';
+            return;
+        }
+
+        studentData.innerHTML = '';
+        students.forEach((s, index) => {
+            const actualIndex = filteredData ? allStudents.indexOf(s) : index;
+            studentData.innerHTML += `
+                <tr onclick="editStudent(${actualIndex})" style="cursor:pointer;">
+                    <td>${index + 1}</td>
+                    <td><strong>${s.id}</strong></td>
+                    <td>${s.name}</td>
+                    <td>${s.dob || ''}</td>
+                    <td>${s.gender || ''}</td>
+                    <td><span class="class-badge">${s.sClass}</span></td>
+                    <td>${s.room}</td>
+                    <td>${s.address || ''}</td>
+                    <td>${s.phone || ''}</td>
+                    <td>${s.parent || ''}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="event.stopPropagation(); editStudent(${actualIndex})">Sửa</button>
+                            <button class="btn-delete" onclick="event.stopPropagation(); deleteStudent(${actualIndex})">Xóa</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function editStudent(index) {
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        const student = students[index];
+
+        document.getElementById('studentID').value = student.id;
+        document.getElementById('studentName').value = student.name;
+        document.getElementById('studentDOB').value = student.dob || '';
+        document.getElementById('studentGender').value = student.gender || '';
+        document.getElementById('studentClass').value = student.sClass;
+        document.getElementById('studentRoom').value = student.room;
+        document.getElementById('studentAddress').value = student.address || '';
+        document.getElementById('studentPhone').value = student.phone || '';
+        document.getElementById('studentParent').value = student.parent || '';
+        document.getElementById('studentPhoto').value = student.photo || '';
+        updatePhotoPreview(student.photo);
+
+        editingIndex = index;
+        
+        // Scroll to form
+        document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function deleteStudent(index) {
+        if (confirm("❓ Bạn có chắc chắn muốn xóa học sinh này không?")) {
+            let students = JSON.parse(localStorage.getItem('students')) || [];
+            students.splice(index, 1);
+            localStorage.setItem('students', JSON.stringify(students));
+            if (channel) channel.postMessage({ type: 'studentUpdated' });
+            displayStudents();
+            updateStats();
+            alert("✓ Xóa học sinh thành công!");
+        }
+    }
+
+    function updatePhotoPreview(photoData) {
+        const preview = document.getElementById('photoPreview');
+        if (photoData) {
+            preview.innerHTML = `<img src="${photoData}" alt="Ảnh học sinh">`;
+        } else {
+            preview.innerHTML = 'Ảnh học sinh<br>khu vực chọn ảnh';
+        }
+    }
+
+    function clearForm() {
+        document.getElementById('studentID').value = '';
+        document.getElementById('studentName').value = '';
+        document.getElementById('studentDOB').value = '';
+        document.getElementById('studentGender').value = '';
+        document.getElementById('studentClass').value = '';
+        document.getElementById('studentRoom').value = '';
+        document.getElementById('studentAddress').value = '';
+        document.getElementById('studentPhone').value = '';
+        document.getElementById('studentParent').value = '';
+        document.getElementById('studentPhoto').value = '';
+        document.getElementById('photoInput').value = '';
+        updatePhotoPreview('');
+        editingIndex = null;
+    }
+
+    function searchStudents() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+        
+        if (!searchTerm) {
+            displayStudents();
+            return;
+        }
+
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        const filtered = students.filter(s => 
+            s.id.toLowerCase().includes(searchTerm) ||
+            s.name.toLowerCase().includes(searchTerm) ||
+            s.sClass.includes(searchTerm) ||
+            (s.address || '').toLowerCase().includes(searchTerm) ||
+            (s.phone || '').toLowerCase().includes(searchTerm) ||
+            (s.parent || '').toLowerCase().includes(searchTerm)
+        );
+
+        if (filtered.length === 0) {
+            document.getElementById('studentData').innerHTML = '<tr><td colspan="9" class="empty-message">🔍 Không tìm thấy kết quả nào!</td></tr>';
+        } else {
+            displayStudents(filtered);
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        displayStudents();
+    }
+
+    function updateStats() {
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        document.getElementById('totalStudents').textContent = students.length;
+    }
+
+    // Lắng nghe cập nhật từ các tab khác
+    if (channel) {
+        channel.onmessage = function(e) {
+            if (e.data.type === 'studentUpdated') {
+                displayStudents();
+                updateStats();
+            }
+        };
+    };
+
+    function setupEventListeners() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    searchStudents();
+                }
+            });
+        }
+
+        const btnAddStudent = document.getElementById('btnAddStudent');
+        const btnClearForm = document.getElementById('btnClearForm');
+        const btnSave = document.getElementById('btnSave');
+        const btnUpdateStudent = document.getElementById('btnUpdateStudent');
+        const btnImportExcel = document.getElementById('btnImportExcel');
+        const btnExportTemplate = document.getElementById('btnExportTemplate');
+        const btnExportToExcel = document.getElementById('btnExportToExcel');
+        const btnPrintList = document.getElementById('btnPrintList');
+        const btnSearch = document.getElementById('btnSearch');
+        const btnClearSearch = document.getElementById('btnClearSearch');
+        const photoInput = document.getElementById('photoInput');
+        const fileInput = document.getElementById('fileInput');
+
+        if (btnAddStudent) btnAddStudent.addEventListener('click', addStudent);
+        if (btnClearForm) btnClearForm.addEventListener('click', clearForm);
+        if (btnSave) btnSave.addEventListener('click', saveToLocalStorage);
+        if (btnUpdateStudent) btnUpdateStudent.addEventListener('click', updateStudent);
+        if (btnImportExcel) btnImportExcel.addEventListener('click', function() {
+            fileInput.click();
+        });
+        if (btnExportTemplate) btnExportTemplate.addEventListener('click', exportTemplate);
+        if (btnExportToExcel) btnExportToExcel.addEventListener('click', exportToExcel);
+        if (btnPrintList) btnPrintList.addEventListener('click', printList);
+        if (btnSearch) btnSearch.addEventListener('click', searchStudents);
+        if (btnClearSearch) btnClearSearch.addEventListener('click', clearSearch);
+        if (photoInput) photoInput.addEventListener('change', handlePhotoUpload);
+        if (fileInput) fileInput.addEventListener('change', importExcel);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRoomList();
+        setupEventListeners();
+    });
+
+    function loadRoomList() {
+        const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+        const roomSelect = document.getElementById('studentRoom');
+        
+        if (roomSelect) {
+            const defaultOption = roomSelect.querySelector('option[value=""]');
+            roomSelect.innerHTML = '';
+            roomSelect.appendChild(defaultOption);
+            
+            rooms.forEach(room => {
+                const option = document.createElement('option');
+                option.value = room.roomName;
+                option.textContent = 'Phòng ' + room.roomName;
+                roomSelect.appendChild(option);
+            });
+        }
+    }
+
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const photoData = e.target.result;
+            document.getElementById('studentPhoto').value = photoData;
+            updatePhotoPreview(photoData);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function updateStudent() {
+        if (editingIndex === null) {
+            alert("⚠️ Vui lòng chọn học sinh cần cập nhật trước khi nhấn CẬP NHẬT.");
+            return;
+        }
+
+        const id = document.getElementById('studentID').value.trim();
+        const name = document.getElementById('studentName').value.trim();
+        const dob = document.getElementById('studentDOB').value;
+        const gender = document.getElementById('studentGender').value;
+        const sClass = document.getElementById('studentClass').value;
+        const room = document.getElementById('studentRoom').value.trim();
+        const address = document.getElementById('studentAddress').value.trim();
+        const phone = document.getElementById('studentPhone').value.trim();
+        const parent = document.getElementById('studentParent').value.trim();
+        const photo = document.getElementById('studentPhoto').value;
+
+        if (!id || !name || !dob || !gender || !sClass || !room || !address || !phone || !parent) {
+            alert("⚠️ Vui lòng nhập đầy đủ thông tin trước khi cập nhật!");
+            return;
+        }
+
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        const duplicate = students.some((s, index) => s.id === id && index !== editingIndex);
+        if (duplicate) {
+            alert("⚠️ Mã học sinh này đã tồn tại trong danh sách khác!");
+            return;
+        }
+
+        students[editingIndex] = { id, name, dob, gender, sClass, room, address, phone, parent, photo };
+        localStorage.setItem('students', JSON.stringify(students));
+        if (channel) channel.postMessage({ type: 'studentUpdated' });
+        displayStudents();
+        updateStats();
+        alert("✓ Cập nhật học sinh thành công!");
+        clearForm();
+    }
+
+    // ===== CÁC HÀM TOOLBAR =====
+
+    function focusAddForm() {
+        document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            document.getElementById('studentID').focus();
+        }, 300);
+    }
+
+    function saveToLocalStorage() {
+        if (editingIndex === null) {
+            alert("⚠️ Vui lòng chọn học sinh cần lưu trước khi nhấn LƯU.");
+            return;
+        }
+
+        const id = document.getElementById('studentID').value.trim();
+        const name = document.getElementById('studentName').value.trim();
+        const dob = document.getElementById('studentDOB').value;
+        const gender = document.getElementById('studentGender').value;
+        const sClass = document.getElementById('studentClass').value;
+        const room = document.getElementById('studentRoom').value.trim();
+        const address = document.getElementById('studentAddress').value.trim();
+        const phone = document.getElementById('studentPhone').value.trim();
+        const parent = document.getElementById('studentParent').value.trim();
+        const photo = document.getElementById('studentPhoto').value;
+
+        if (!id || !name || !dob || !gender || !sClass || !room || !address || !phone || !parent) {
+            alert("⚠️ Vui lòng nhập đầy đủ thông tin trước khi lưu!");
+            return;
+        }
+
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        students[editingIndex] = { id, name, dob, gender, sClass, room, address, phone, parent, photo };
+        localStorage.setItem('students', JSON.stringify(students));
+        if (channel) channel.postMessage({ type: 'studentUpdated' });
+        displayStudents();
+        updateStats();
+        alert("✓ Dữ liệu đã được lưu lại thành công!");
+        clearForm();
+    }
+
+    function deleteAllStudents() {
+        if (!confirm("❌ Bạn có chắc chắn muốn xóa TẤT CẢ học sinh không? Hành động này không thể hoàn tác!")) {
+            return;
+        }
+        
+        if (confirm("⚠️ Nhập 'XÁC NHẬN' để xóa tất cả học sinh (phân biệt hoa/thường):")) {
+            const userInput = prompt("Nhập 'XÁC NHẬN':");
+            if (userInput === "XÁC NHẬN") {
+                localStorage.removeItem('students');
+                if (channel) channel.postMessage({ type: 'studentUpdated' });
+                displayStudents();
+                updateStats();
+                alert("✓ Tất cả học sinh đã được xóa!");
+            } else {
+                alert("❌ Hủy xóa!");
+            }
+        }
+    }
+
+    function exportTemplate() {
+        const template = [
+            ['Mã HS', 'Họ Tên', 'Ngày Sinh', 'Giới Tính', 'Lớp', 'Phòng', 'Địa chỉ', 'ĐT gia đình', 'Họ tên bố mẹ'],
+            ['HS001', 'Nguyễn Văn A', '2005-01-01', 'Nam', '1A', '101', '123 Đường ABC, Quận XYZ', '0123456789', 'Nguyễn Văn B'],
+            ['HS002', 'Trần Thị C', '2006-02-02', 'Nữ', '2A', '102', '456 Đường DEF, Quận UVW', '0987654321', 'Trần Văn D']
+        ];
+
+        let csv = template.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'mau-nhap-hoc-sinh.csv');
+        link.click();
+        alert("✓ Xuất mẫu Excel thành công!");
+    }
+
+    function exportToExcel() {
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        if (students.length === 0) {
+            alert("❌ Không có dữ liệu để xuất!");
+            return;
+        }
+
+        let csv = 'STT,Mã HS,Họ Tên,Lớp,Phòng,Địa chỉ,SĐT gia đình,Họ tên bố mẹ\n';
+        students.forEach((s, index) => {
+            csv += `${index + 1},"${s.id}","${s.name}","${s.sClass}","${s.room}","${s.address || ''}","${s.phone || ''}","${s.parent || ''}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `danh-sach-hoc-sinh-${new Date().getTime()}.csv`);
+        link.click();
+        alert("✓ Xuất file Excel thành công!");
+    }
+
+    function importExcel(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const text = e.target.result;
+                const lines = text.trim().split('\n');
+                
+                if (lines.length < 2) {
+                    alert("❌ File không hợp lệ!");
+                    return;
+                }
+
+                let students = JSON.parse(localStorage.getItem('students')) || [];
+                let importedCount = 0;
+
+                for (let i = 1; i < lines.length; i++) {
+                    const parts = lines[i].split(',').map(p => p.trim().replace(/^"|"$/g, ''));
+                    
+                    if (parts.length < 9 || !parts[0] || !parts[1]) continue;
+
+                    const student = {
+                        id: parts[0],
+                        name: parts[1],
+                        dob: parts[2] || '',
+                        gender: parts[3] || '',
+                        sClass: parts[4] || '',
+                        room: parts[5] || '',
+                        address: parts[6] || '',
+                        phone: parts[7] || '',
+                        parent: parts[8] || '',
+                        photo: ''
+                    };
+
+                    if (!students.some(s => s.id === student.id)) {
+                        students.push(student);
+                        importedCount++;
+                    }
+                }
+
+                localStorage.setItem('students', JSON.stringify(students));
+                if (channel) channel.postMessage({ type: 'studentUpdated' });
+                displayStudents();
+                updateStats();
+                alert(`✓ Nhập thành công ${importedCount} học sinh!`);
+                
+                document.getElementById('fileInput').value = '';
+            } catch (error) {
+                alert("❌ Lỗi khi đọc file: " + error.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function printList() {
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        if (students.length === 0) {
+            alert("❌ Không có dữ liệu để in!");
+            return;
+        }
+
+        let html = `
+            <html>
+            <head>
+                <title>Danh Sách Học Sinh Bán Trú</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h2 { text-align: center; color: #2E7D32; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #000; padding: 10px; text-align: left; }
+                    th { background-color: #2E7D32; color: white; font-weight: bold; }
+                    tr:nth-child(even) { background-color: #f9f9f9; }
+                    .footer { margin-top: 30px; display: flex; justify-content: space-around; text-align: center; }
+                    .signature { width: 30%; }
+                </style>
+            </head>
+            <body>
+                <h2>DANH SÁCH HỌC SINH BÁN TRÚ</h2>
+                <p>Ngày in: ${new Date().toLocaleDateString('vi-VN')}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã HS</th>
+                            <th>Họ Tên</th>
+                            <th>Lớp</th>
+                            <th>Phòng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        students.forEach((s, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.sClass}</td>
+                    <td>${s.room}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <div class="signature">
+                        <p>Người lập</p>
+                        <br><br>
+                        <p class="signature-line">_____________</p>
+                    </div>
+                    <div class="signature">
+                        <p>Hiệu trưởng</p>
+                        <br><br>
+                        <p class="signature-line">_____________</p>
+                    </div>
+                </div>
+            <\/body>
+            <\/html>
+        `;
+
+        const printWindow = window.open('', '', 'width=900,height=600');
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    // Gắn hàm vào window để onclick inline có thể gọi được
+    window.addStudent = addStudent;
+    window.clearForm = clearForm;
+    window.focusAddForm = focusAddForm;
+    window.saveToLocalStorage = saveToLocalStorage;
+    window.updateStudent = updateStudent;
+    window.deleteAllStudents = deleteAllStudents;
+    window.exportTemplate = exportTemplate;
+    window.exportToExcel = exportToExcel;
+    window.importExcel = importExcel;
+    window.printList = printList;
+    window.searchStudents = searchStudents;
+    window.clearSearch = clearSearch;
+    window.editStudent = editStudent;
+    window.deleteStudent = deleteStudent;
+    window.displayStudents = displayStudents;
+    window.updateStats = updateStats;
+</script>
+
+</body>
+</html>

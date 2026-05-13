@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điểm Danh Bán Trú - QR Code</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0078D4 0%, #005A9E 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #0078D4;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 10px 20px;
+            background: rgba(0, 120, 212, 0.1);
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 120, 212, 0.2);
+        }
+
+        .header h1 {
+            color: #FFD700;
+            font-size: 2.8em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 2px;
+        }
+
+        .header h2 {
+            color: #00B050;
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #0078D4;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section h3 {
+            color: #0078D4;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #qrInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #qrInput:focus {
+            outline: none;
+            border-color: #0078D4;
+            box-shadow: 0 0 10px rgba(0, 120, 212, 0.2);
+        }
+
+        .btn-scan {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #FF6B6B 0%, #E63946 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4);
+        }
+
+        .attendance-info {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #0078D4;
+        }
+
+        .attendance-info h4 {
+            color: #0078D4;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .attendance-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border-top: 3px solid #0078D4;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #0078D4;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .buttons-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #00B050;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .btn-action {
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 100px;
+            text-align: center;
+        }
+
+        .btn-action i {
+            font-size: 1.8em;
+        }
+
+        .btn-create-student {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-create-teacher {
+            background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
+        }
+
+        .btn-export-zip {
+            background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 100%);
+        }
+
+        .btn-export-attendance {
+            background: linear-gradient(135deg, #A8EDEA 0%, #FED6E3 100%);
+            color: #333;
+        }
+
+        .btn-missing-students {
+            background: linear-gradient(135deg, #FF9B6E 0%, #FF6B6B 100%);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .attendance-list {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .attendance-list h3 {
+            color: #0078D4;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #0078D4 0%, #005A9E 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:hover {
+            background: #f0f0f0;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status-present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-delete {
+            padding: 5px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal h2 {
+            color: #0078D4;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0078D4;
+            box-shadow: 0 0 10px rgba(0, 120, 212, 0.2);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn-modal {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary {
+            background: #0078D4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #005A9E;
+        }
+
+        .btn-secondary {
+            background: #ddd;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #ccc;
+        }
+
+        .video-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .camera-controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .camera-controls .btn-start {
+            background: #00B050;
+            color: white;
+        }
+
+        .camera-controls .btn-stop {
+            background: #FF6B6B;
+            color: white;
+        }
+
+        .school-info {
+            background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+
+        .school-info h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .school-info p {
+            margin: 5px 0;
+            font-weight: 500;
+        }
+
+        .session-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            color: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .session-btn:hover {
+            background: #f5f5f5;
+            border-color: #FFD700;
+        }
+
+        .session-btn.session-selected {
+            border: 2px solid #FFD700;
+            background: #fffacd;
+            color: #333;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .toast {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid #00B050;
+        }
+
+        .toast.error {
+            border-left-color: #FF6B6B;
+        }
+
+        .toast-message {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .toast-icon {
+            font-size: 1.2em;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header h2 {
+                font-size: 1.3em;
+            }
+
+            .buttons-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-action {
+                min-height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toastContainer" style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+    "></div>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← Quay lại Trang Chủ</a>
+
+        <div class="header">
+            <h1><i class="fas fa-qrcode"></i> ĐIỂM DANH BÁN TRÚ BẰNG MÃ QR • 2025-2026</h1>
+
+
+            <div class="school-info" id="schoolInfo">
+                <h3>Thông tin nhà trường</h3>
+                <p>Vui lòng kiểm tra tệp nha-truong.html</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Input Section -->
+            <div class="input-section">
+                <h3><i class="fas fa-qrcode"></i> Quét Mã QR</h3>
+                
+                <!-- Session Selection -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: bold; color: #0078D4; margin-bottom: 8px;">Chọn buổi:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <button class="session-btn session-selected" data-session="morning">
+                            <i class="fas fa-sun"></i> Sáng
+                        </button>
+                        <button class="session-btn" data-session="afternoon">
+                            <i class="fas fa-cloud-sun"></i> Trưa
+                        </button>
+                        <button class="session-btn" data-session="evening">
+                            <i class="fas fa-moon"></i> Tối
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="qrInput" 
+                        placeholder="Nhập mã QR thủ công hoặc quét từ camera..."
+                        autocomplete="off"
+                    />
+                    <input 
+                        type="text" 
+                        id="scannerInput" 
+                        placeholder="Máy quét barcode"
+                        autocomplete="off"
+                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; display: none; font-size: 14px;"
+                    />
+                    <button class="btn-scan" id="cameraBtnModal">
+                        <i class="fas fa-camera"></i> Camera
+                    </button>
+                </div>
+
+                <div class="attendance-info">
+                    <h4>Thông tin điểm danh</h4>
+                    <div class="attendance-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Tổng số người</div>
+                            <div class="stat-value" id="totalCount">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Đã điểm danh</div>
+                            <div class="stat-value" id="presentCount">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Chưa điểm danh</div>
+                            <div class="stat-value" id="absentCount">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Tỉ lệ</div>
+                            <div class="stat-value" id="percentage">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons Section -->
+            <div class="buttons-section">
+                <div class="buttons-grid">
+                    <button class="btn-action btn-create-student" id="createStudentBtn">
+                        <i class="fas fa-id-card"></i>
+                        Tạo thẻ học sinh
+                    </button>
+                    <button class="btn-action btn-create-teacher" id="createTeacherBtn">
+                        <i class="fas fa-chalkboard-user"></i>
+                        Tạo thẻ giáo viên
+                    </button>
+                    <button class="btn-action btn-export-zip" id="exportZipBtn">
+                        <i class="fas fa-file-archive"></i>
+                        Xuất ZIP thẻ
+                    </button>
+                    <button class="btn-action btn-export-attendance" id="exportAttendanceBtn">
+                        <i class="fas fa-file-csv"></i>
+                        Xuất điểm danh
+                    </button>
+                    <button class="btn-action btn-missing-students btn-full-width" id="missingStudentsBtn">
+                        <i class="fas fa-user-clock"></i>
+                        HS chưa điểm danh
+                    </button>
+                    <button class="btn-action" id="clearAttendanceBtn" style="background: linear-gradient(135deg, #FF6B6B 0%, #E63946 100%); grid-column: span 1;">
+                        <i class="fas fa-trash-alt"></i>
+                        Xóa dữ liệu
+                    </button>
+                    <button class="btn-action" id="printAttendanceBtn" style="background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); grid-column: span 1;">
+                        <i class="fas fa-print"></i>
+                        In danh sách
+                    </button>
+                    <button class="btn-action" id="statisticsBtn" style="background: linear-gradient(135deg, #FFA500 0%, #FF8C42 100%); grid-column: span 1;">
+                        <i class="fas fa-chart-bar"></i>
+                        Thống kê
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="attendance-list">
+            <h3><i class="fas fa-list"></i> Danh sách điểm danh</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã QR</th>
+                        <th>Loại</th>
+                        <th>Tên</th>
+                        <th>Phòng/Lớp</th>
+                        <th>Buổi</th>
+                        <th>Giờ điểm danh</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            Tất cả học sinh đều đã điểm danh!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeCameraModal">&times;</span>
+            <h2><i class="fas fa-camera"></i> Quét Mã QR từ Camera</h2>
+            <div class="video-container">
+                <video id="video" autoplay muted></video>
+            </div>
+            <div class="camera-controls">
+                <button class="btn-start" id="startCameraBtn"><i class="fas fa-play"></i> Bật Camera</button>
+                <button class="btn-stop" id="stopCameraBtn"><i class="fas fa-stop"></i> Tắt Camera</button>
+            </div>
+            <div class="form-group">
+                <label>Kết quả quét:</label>
+                <input type="text" id="cameraQrResult" placeholder="Kết quả sẽ hiển thị ở đây..." readonly />
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-modal btn-secondary" id="confirmCameraBtn">Xác nhận</button>
+                <button class="btn-modal btn-secondary" id="cancelCameraBtn">Huỷ bỏ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Student Modal -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" id="closeStudentModal">&times;</span>
+            <h2><i class="fas fa-id-card"></i> Tạo Thẻ Học Sinh</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <!-- Form Input -->
+                <div>
+                    <div class="form-group">
+                        <label>Chọn học sinh:</label>
+                        <select id="studentSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
+                            <option value="">-- Chọn học sinh --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên Học Sinh:</label>
+                        <input type="text" id="studentFormName" placeholder="VD: Nguyễn Văn A" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mã Học Sinh:</label>
+                        <input type="text" id="studentFormID" placeholder="VD: HS2024001" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lớp Học:</label>
+                        <input type="text" id="studentFormClass" placeholder="VD: 6A" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phòng/Ký túc xá:</label>
+                        <input type="text" id="studentFormRoom" placeholder="VD: A101" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ảnh Học Sinh:</label>
+                        <input type="file" id="studentFormImage" accept="image/*" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                        <img id="studentFormImagePreview" style="max-width: 100px; margin-top: 10px; display: none; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên Trường:</label>
+                        <input type="text" id="studentFormSchool" placeholder="VD: Trường PTDTBT THCS Hùng Lợi" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+                </div>
+
+                <!-- Card Preview -->
+                <div style="text-align: center;">
+                    <h3 style="color: #0078D4; margin-bottom: 15px;">Xem Trước Thẻ</h3>
+                    <div id="studentCardPreview" style="
+                        width: 350px;
+                        height: 220px;
+                        background: white;
+                        border: 3px solid #003D7A;
+                        border-radius: 15px;
+                        padding: 0;
+                        color: #003D7A;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                        position: relative;
+                        overflow: hidden;
+                        font-family: 'Arial', sans-serif;
+                        margin: 0 auto;
+                    ">
+                        <!-- Header -->
+                        <div style="background-color: #003D7A; color: white; padding: 8px; text-align: center; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">
+                            TRƯỜNG PTDTBT THCS HÙNG LỢI
+                        </div>
+                        
+                        <!-- Tiêu đề -->
+                        <div style="text-align: center; color: #FF0000; font-weight: bold; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid #ddd; margin: 0;">
+                            THẺ HỌC SINH BÁN TRÚ 2025-2026
+                        </div>
+                        
+                        <!-- Nội dung -->
+                        <div style="display: flex; flex: 1; padding: 10px 12px;">
+                            <!-- Thông tin chính -->
+                            <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-around; font-size: 13px;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-weight: bold; min-width: 70px;">Học sinh:</span>
+                                    <span id="studentCardName">LỲ THỊ CHIỀU</span>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-weight: bold; min-width: 70px;">Lớp:</span>
+                                    <span id="studentCardClass">7A</span>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-weight: bold; min-width: 70px;">Phòng:</span>
+                                    <span id="studentCardRoom">B105</span>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-weight: bold; min-width: 70px;">Mã:</span>
+                                    <span id="studentCardID">HS0013</span>
+                                </div>
+                            </div>
+                            
+                            <!-- QR Code -->
+                            <div style="width: 80px; height: 80px; background: white; border: 1px solid #ddd; border-radius: 3px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 2px; flex-shrink: 0;">
+                                <div id="studentCardQR" style="width: 100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-modal" id="studentExportImageBtn" style="background: #6f42c1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-image"></i> Xuất Ảnh
+                </button>
+                <button class="btn-modal btn-primary" id="studentPrintBtn" style="background: #00B050; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-print"></i> In
+                </button>
+                <button class="btn-modal btn-secondary" id="cancelStudentBtn" style="background: #ddd; color: #333; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Teacher Modal -->
+    <div id="teacherModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" id="closeTeacherModal">&times;</span>
+            <h2><i class="fas fa-chalkboard-user"></i> Tạo Thẻ Giáo Viên</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <!-- Form Input -->
+                <div>
+                    <div class="form-group">
+                        <label>Chọn giáo viên:</label>
+                        <select id="teacherSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
+                            <option value="">-- Chọn giáo viên --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên Giáo Viên:</label>
+                        <input type="text" id="teacherFormName" placeholder="VD: Bùi Mạnh Cường" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mã Giáo Viên:</label>
+                        <input type="text" id="teacherFormID" placeholder="VD: GV2024001" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bộ Môn:</label>
+                        <input type="text" id="teacherFormDept" placeholder="VD: Toán" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Điện Thoại:</label>
+                        <input type="text" id="teacherFormPhone" placeholder="VD: 0987654321" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ảnh Giáo Viên:</label>
+                        <input type="file" id="teacherFormImage" accept="image/*" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                        <img id="teacherFormImagePreview" style="max-width: 100px; margin-top: 10px; display: none; border-radius: 8px;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên Trường:</label>
+                        <input type="text" id="teacherFormSchool" placeholder="VD: Trường PTDTBT THCS Hùng Lợi" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px;" />
+                    </div>
+                </div>
+
+                <!-- Card Preview -->
+                <div style="text-align: center;">
+                    <h3 style="color: #0078D4; margin-bottom: 15px;">Xem Trước Thẻ</h3>
+                    <div id="teacherCardPreview" style="
+                        width: 243px;
+                        height: 154px;
+                        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                        border-radius: 12px;
+                        padding: 12px;
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+                        transform: rotateY(-5deg) rotateX(5deg);
+                        position: relative;
+                        overflow: hidden;
+                        font-size: 10px;
+                        line-height: 1.2;
+                        font-family: 'Arial', sans-serif;
+                        margin: 0 auto;
+                    ">
+                        <div style="text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.3); padding-bottom: 4px; margin-bottom: 4px; font-weight: bold; font-size: 9px; letter-spacing: 0.5px;">
+                            THẺ GIÁO VIÊN
+                        </div>
+                        <div style="flex: 1; display: flex; gap: 6px; align-items: flex-start;">
+                            <!-- Ảnh -->
+                            <div style="width: 45px; height: 55px; background: white; border-radius: 3px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #999; background: #f0f0f0;">
+                                <span id="teacherCardPhoto">Ảnh</span>
+                            </div>
+                            <!-- Thông tin -->
+                            <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 55px;">
+                                <div style="display: flex; justify-content: space-between; gap: 4px;">
+                                    <span style="font-weight: bold; font-size: 8px; white-space: nowrap;">Tên:</span>
+                                    <span id="teacherCardName" style="font-size: 9px; max-width: 45px; word-break: break-word; text-align: right;">N/A</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; gap: 4px;">
+                                    <span style="font-weight: bold; font-size: 8px; white-space: nowrap;">Mã:</span>
+                                    <span id="teacherCardID" style="font-size: 9px;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; gap: 4px;">
+                                    <span style="font-weight: bold; font-size: 8px; white-space: nowrap;">BM:</span>
+                                    <span id="teacherCardDept" style="font-size: 9px;">--</span>
+                                </div>
+                            </div>
+                            <!-- QR Code nhỏ -->
+                            <div style="width: 40px; height: 40px; background: white; border-radius: 2px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 2px;">
+                                <div id="teacherCardQR" style="width: 100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; font-size: 8px; border-top: 1px solid rgba(255, 255, 255, 0.3); padding-top: 3px; margin-top: 3px;">
+                            <span id="teacherCardPhone" style="margin-right: 4px;">--</span>
+                            <span id="teacherCardSchool">Trường</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-modal" id="teacherExportImageBtn" style="background: #6f42c1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-image"></i> Xuất Ảnh
+                </button>
+                <button class="btn-modal btn-primary" id="teacherPrintBtn" style="background: #00B050; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-print"></i> In
+                </button>
+                <button class="btn-modal btn-secondary" id="cancelTeacherBtn" style="background: #ddd; color: #333; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export ZIP Modal -->
+    <div id="exportZipModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeExportZipModal">&times;</span>
+            <h2><i class="fas fa-file-archive"></i> Xuất Thẻ ZIP</h2>
+            
+            <div style="margin: 20px 0;">
+                <div class="form-group">
+                    <label><input type="checkbox" id="exportTeachers" checked /> Xuất thẻ giáo viên</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="exportStudents" checked /> Xuất thẻ học sinh</label>
+                </div>
+            </div>
+
+            <div id="studentFilterOptions" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <h4 style="color: #0078D4; margin-top: 0;">Tuỳ chọn lọc học sinh:</h4>
+                
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 10px;">
+                        <input type="radio" name="studentFilter" value="all" checked /> Xuất tất cả học sinh
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 10px;">
+                        <input type="radio" name="studentFilter" value="byClass" /> Xuất theo lớp:
+                    </label>
+                    <select id="classFilterSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; margin-left: 20px;" disabled>
+                        <option value="">-- Chọn lớp --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 10px;">
+                        <input type="radio" name="studentFilter" value="byRoom" /> Xuất theo phòng/ký túc xá:
+                    </label>
+                    <select id="roomFilterSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; margin-left: 20px;" disabled>
+                        <option value="">-- Chọn phòng --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-modal btn-primary" id="confirmExportZipBtn" style="background: #00B050; color: white;">
+                    <i class="fas fa-download"></i> Xuất
+                </button>
+                <button class="btn-modal btn-secondary" id="cancelExportZipBtn">Huỷ bỏ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="statisticsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeStatisticsModal">&times;</span>
+            <h2><i class="fas fa-chart-bar"></i> Thống Kê Điểm Danh</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;" id="statTotalStudents">0</div>
+                    <div style="font-size: 1em;">Tổng học sinh</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #00B050 0%, #00B050 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;" id="statAttended">0</div>
+                    <div style="font-size: 1em;">Đã điểm danh</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #FF6B6B 0%, #E63946 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;" id="statAbsent">0</div>
+                    <div style="font-size: 1em;">Chưa điểm danh</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #FFA500 0%, #FF8C42 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;" id="statPercentage">0%</div>
+                    <div style="font-size: 1em;">Tỉ lệ đã điểm danh</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;" id="statTeachers">0</div>
+                    <div style="font-size: 1em;">Giáo viên đã điểm danh</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;" id="statTotal">0</div>
+                    <div style="font-size: 1em;">Tổng cộng đã điểm danh</div>
+                </div>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h4 style="color: #0078D4; margin-top: 0;">Thống kê theo buổi:</h4>
+                <div id="sessionStats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <!-- Will be filled by JS -->
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-modal btn-secondary" id="closeStatisticsBtn">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missing Students Modal -->
+    <div id="missingModal" class="modal">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên học sinh</th>
+                        <th>Lớp</th>
+                        <th>Phòng</th>
+                    </tr>
+                </thead>
+                <tbody id="missingTableBody">
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            Tất cả học sinh đều đã điểm danh!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="modal-buttons">
+                <button class="btn-modal btn-secondary" id="closeMissingBtn">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="diem-danh.js" type="text/javascript"></script>
+</body>
+</html>

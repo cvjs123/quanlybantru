@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhận Diện Khuôn Mặt</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/2.13.0/tf.min.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/facemesh/1.0.0/facemesh.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-coco-ssd@2.2.2"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #9ed5c5 0%, #d8f1ec 42%, #ffffff 100%);
+            color: #072d36;
+        }
+        
+        .page-header {
+            position: relative;
+            text-align: center;
+            padding: 42px 18px 24px;
+            overflow: hidden;
+        }
+        
+        .page-header h1 {
+            margin: 0;
+            font-size: 3rem;
+            color: #d11149;
+            position: relative;
+            letter-spacing: 0.1em;
+        }
+        
+        .page-header p {
+            margin: 12px auto 0;
+            font-size: 1.05rem;
+            color: #114b5f;
+            position: relative;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            color: #114b5f;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 16px;
+        }
+        
+        .back-btn:hover {
+            color: #0b3d91;
+            transform: translateX(-4px);
+        }
+        
+        .container {
+            max-width: 1300px;
+            margin: 0 auto 36px;
+            padding: 0 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #d11149;
+            border-bottom-color: #d11149;
+        }
+        
+        .tab-content {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        #video, #canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .video-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #d11149;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #b0093d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(209,17,73,0.3);
+        }
+        
+        .btn-secondary {
+            background: #114b5f;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #0a3347;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #072d36;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d11149;
+            box-shadow: 0 0 0 3px rgba(209,17,73,0.1);
+        }
+        
+        .results-container {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: #f9fafb;
+            border-left: 4px solid #d11149;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+        
+        .result-item.not-found {
+            border-left-color: #ef4444;
+        }
+        
+        .result-item.success {
+            border-left-color: #10b981;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        th {
+            background: #072d36;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .student-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.recognized {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            color: #1e40af;
+            font-size: 0.95rem;
+        }
+        
+        .info-box i {
+            margin-right: 8px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #d11149;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toast Notifications */
+        #notificationContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 550px;
+        }
+        
+        .toast-notification {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease;
+            border-left: 5px solid #10b981;
+            position: relative;
+        }
+        
+        .toast-notification.success {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #f0fdf4 100%);
+        }
+        
+        .toast-notification.info {
+            border-left-color: #3b82f6;
+            background: linear-gradient(135deg, #f0f9ff 0%, #f0f9ff 100%);
+        }
+        
+        .toast-notification.warning {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbf0 0%, #fffbf0 100%);
+        }
+        
+        .toast-notification.error {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+        }
+        
+        .toast-icon {
+            font-size: 1.5rem;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        .toast-icon.success { color: #10b981; }
+        .toast-icon.info { color: #3b82f6; }
+        .toast-icon.warning { color: #f59e0b; }
+        .toast-icon.error { color: #ef4444; }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .toast-message {
+            font-size: 0.95rem;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .toast-close:hover {
+            color: #374151;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+        
+        .toast-notification.removing {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+        
+        .face-detection-alert {
+            background: linear-gradient(135deg, #d11149 0%, #b0093d 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            animation: pulse 0.5s ease;
+        }
+        
+        .face-detection-alert.recognized {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+    
+    <section class="page-header">
+        <a href="index.html" class="back-btn">← Quay lại Trang Chủ</a>
+        <h1><i class="fas fa-face-smile"></i> HỆ THỐNG NHẬN DIỆN KHUÔN MẶT</h1>
+        <p>🤖 Công nghệ AI tiên tiến - Quản lý bán trú thông minh | 2025-2026</p>
+    </section>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(this, 'recognition')">
+                <i class="fas fa-camera"></i> Nhận Diện Học Sinh
+            </button>
+            <button class="tab-btn" onclick="switchTab(this, 'register')">
+                <i class="fas fa-user-plus"></i> Đăng Ký HS
+            </button>
+            <button class="tab-btn" onclick="switchTab(this, 'database')">
+                <i class="fas fa-database"></i> CSDL Học Sinh
+            </button>
+            <button class="tab-btn" onclick="switchTab(this, 'recognitionTeacher')">
+                <i class="fas fa-chalkboard-user"></i> Nhận Diện GV
+            </button>
+            <button class="tab-btn" onclick="switchTab(this, 'registerTeacher')">
+                <i class="fas fa-user-tie"></i> Đăng Ký GV
+            </button>
+            <button class="tab-btn" onclick="switchTab(this, 'databaseTeacher')">
+                <i class="fas fa-address-book"></i> CSDL Giáo Viên
+            </button>
+            <button class="tab-btn" onclick="switchTab(this, 'statistics')">
+                <i class="fas fa-chart-bar"></i> Thống Kê
+            </button>
+        </div>
+
+        <!-- TAB: Nhận Diện -->
+        <div id="recognition" class="tab-content active">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Sử dụng camera để nhận diện học sinh. Hệ thống sẽ tìm kiếm các khuôn mặt phù hợp trong cơ sở dữ liệu.
+            </div>
+            
+            <div class="video-controls">
+                <button class="btn-secondary" onclick="startRecognition()">
+                    <i class="fas fa-play"></i> Bắt Đầu Camera
+                </button>
+                <button class="btn-warning" onclick="stopRecognition()">
+                    <i class="fas fa-stop"></i> Dừng Camera
+                </button>
+                <button class="btn-success" onclick="testFaceRecognition()" title="Kiểm tra thông báo nhận diện">
+                    <i class="fas fa-vial"></i> Kiểm Tra
+                </button>
+            </div>
+
+            <div class="video-container">
+                <video id="video" width="600" height="500" autoplay playsinline></video>
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label>Độ Tin Cậy Tối Thiểu:</label>
+                    <input type="range" id="confidenceThreshold" min="0" max="1" step="0.05" value="0.6" oninput="updateThresholdDisplay()">
+                    <small id="thresholdDisplay">60%</small>
+                </div>
+            </div>
+
+            <div class="results-container" id="recognitionResults"></div>
+        </div>
+
+        <!-- TAB: Đăng Ký Khuôn Mặt -->
+        <div id="register" class="tab-content">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Đăng ký khuôn mặt học sinh để sử dụng trong hệ thống nhận diện.
+            </div>
+
+            <div class="form-group">
+                <label>Chọn Học Sinh:</label>
+                <select id="studentSelect">
+                    <option value="">-- Chọn học sinh --</option>
+                </select>
+            </div>
+
+            <div class="video-controls">
+                <button class="btn-secondary" onclick="startRegistration()">
+                    <i class="fas fa-camera"></i> Bắt Đầu Camera
+                </button>
+                <button class="btn-warning" onclick="stopRegistration()">
+                    <i class="fas fa-stop"></i> Dừng Camera
+                </button>
+                <button class="btn-success" onclick="captureAndRegister()" id="captureBtn" disabled>
+                    <i class="fas fa-image"></i> Chụp Ảnh
+                </button>
+            </div>
+
+            <div class="video-container" id="registrationVideoContainer" style="display: none;">
+                <video id="registrationVideo" width="600" height="500" autoplay playsinline></video>
+                <canvas id="registrationCanvas"></canvas>
+            </div>
+
+            <div id="capturedPreview"></div>
+
+            <div style="margin-top: 30px; background: #f0f9ff; border: 2px solid #3b82f6; border-radius: 12px; padding: 20px;">
+                <h3 style="color: #1e40af; margin-top: 0;"><i class="fas fa-upload"></i> Tải Ảnh Từ Máy Tính</h3>
+                <p style="color: #4b7399; margin-bottom: 15px;">Bạn có thể chọn ảnh từ máy tính để thêm vào cơ sở dữ liệu khuôn mặt.</p>
+                
+                <div class="form-group">
+                    <label for="imageUploadFile" style="font-weight: 600; color: #1e40af;">Chọn Ảnh:</label>
+                    <input type="file" id="imageUploadFile" accept="image/*" title="Chọn ảnh từ máy tính" />
+                </div>
+
+                <div id="uploadPreview" style="text-align: center; margin-top: 15px;"></div>
+
+                <button class="btn-primary" onclick="uploadImageToDatabase()" style="width: 100%; background: #3b82f6; margin-top: 15px;">
+                    <i class="fas fa-check"></i> Lưu Ảnh Vào Cơ Sở Dữ Liệu
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB: Cơ Sở Dữ Liệu -->
+        <div id="database" class="tab-content">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Quản lý cơ sở dữ liệu khuôn mặt học sinh.
+            </div>
+
+            <div class="video-controls">
+                <button class="btn-primary" onclick="loadFaceDatabase()">
+                    <i class="fas fa-sync"></i> Tải Lại
+                </button>
+                <button class="btn-warning" onclick="clearAllFaces()" style="background: #ef4444;">
+                    <i class="fas fa-trash"></i> Xóa Tất Cả
+                </button>
+                <button class="btn-secondary" onclick="exportDatabase()">
+                    <i class="fas fa-download"></i> Xuất Dữ Liệu
+                </button>
+            </div>
+
+            <div id="databaseTable"></div>
+        </div>
+
+        <!-- TAB: Nhận Diện Giáo Viên -->
+        <div id="recognitionTeacher" class="tab-content">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Sử dụng camera để nhận diện giáo viên. Hệ thống sẽ tìm kiếm khuôn mặt phù hợp trong cơ sở dữ liệu.
+            </div>
+            
+            <div class="video-controls">
+                <button class="btn-secondary" onclick="startTeacherRecognition()">
+                    <i class="fas fa-play"></i> Bắt Đầu Camera
+                </button>
+                <button class="btn-warning" onclick="stopTeacherRecognition()">
+                    <i class="fas fa-stop"></i> Dừng Camera
+                </button>
+                <button class="btn-success" onclick="testTeacherRecognition()" title="Kiểm tra thông báo nhận diện">
+                    <i class="fas fa-vial"></i> Kiểm Tra
+                </button>
+            </div>
+
+            <div class="video-container">
+                <video id="teacherVideo" width="600" height="500" autoplay playsinline></video>
+                <canvas id="teacherCanvas"></canvas>
+            </div>
+
+            <div class="results-container" id="teacherRecognitionResults"></div>
+        </div>
+
+        <!-- TAB: Đăng Ký Khuôn Mặt Giáo Viên -->
+        <div id="registerTeacher" class="tab-content">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Đăng ký khuôn mặt giáo viên để sử dụng trong hệ thống nhận diện.
+            </div>
+
+            <div class="form-group">
+                <label>Chọn Giáo Viên:</label>
+                <select id="teacherSelect">
+                    <option value="">-- Chọn giáo viên --</option>
+                </select>
+            </div>
+
+            <div class="video-controls">
+                <button class="btn-secondary" onclick="startTeacherRegistration()">
+                    <i class="fas fa-camera"></i> Bắt Đầu Camera
+                </button>
+                <button class="btn-warning" onclick="stopTeacherRegistration()">
+                    <i class="fas fa-stop"></i> Dừng Camera
+                </button>
+                <button class="btn-success" onclick="captureAndRegisterTeacher()" id="captureTeacherBtn" disabled>
+                    <i class="fas fa-image"></i> Chụp Ảnh
+                </button>
+            </div>
+
+            <div class="video-container" id="teacherRegistrationVideoContainer" style="display: none;">
+                <video id="teacherRegistrationVideo" width="600" height="500" autoplay playsinline></video>
+                <canvas id="teacherRegistrationCanvas"></canvas>
+            </div>
+
+            <div id="capturedTeacherPreview"></div>
+
+            <div style="margin-top: 30px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 20px;">
+                <h3 style="color: #b45309; margin-top: 0;"><i class="fas fa-upload"></i> Tải Ảnh Từ Máy Tính</h3>
+                <p style="color: #92400e; margin-bottom: 15px;">Bạn có thể chọn ảnh từ máy tính để thêm vào cơ sở dữ liệu giáo viên.</p>
+                
+                <div class="form-group">
+                    <label for="imageUploadTeacherFile" style="font-weight: 600; color: #b45309;">Chọn Ảnh:</label>
+                    <input type="file" id="imageUploadTeacherFile" accept="image/*" />
+                </div>
+
+                <div id="uploadTeacherPreview" style="text-align: center; margin-top: 15px;"></div>
+
+                <button class="btn-primary" onclick="uploadTeacherImageToDatabase()" style="width: 100%; background: #f59e0b; margin-top: 15px;">
+                    <i class="fas fa-check"></i> Lưu Ảnh Vào Cơ Sở Dữ Liệu
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB: Cơ Sở Dữ Liệu Giáo Viên -->
+        <div id="databaseTeacher" class="tab-content">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Quản lý cơ sở dữ liệu khuôn mặt giáo viên.
+            </div>
+
+            <div class="video-controls">
+                <button class="btn-primary" onclick="loadTeacherFaceDatabase()">
+                    <i class="fas fa-sync"></i> Tải Lại
+                </button>
+                <button class="btn-warning" onclick="clearAllTeacherFaces()" style="background: #ef4444;">
+                    <i class="fas fa-trash"></i> Xóa Tất Cả
+                </button>
+                <button class="btn-secondary" onclick="exportTeacherDatabase()">
+                    <i class="fas fa-download"></i> Xuất Dữ Liệu
+                </button>
+            </div>
+
+            <div id="teacherDatabaseTable"></div>
+        </div>
+
+        <!-- TAB: Thống Kê -->
+        <div id="statistics" class="tab-content">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Thống kê tổng hợp hệ thống nhận diện khuôn mặt.
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 8px;" id="statsStudentCount">0</div>
+                    <div style="font-size: 1.1rem; opacity: 0.9;">Tổng Học Sinh</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 8px;" id="statsTeacherCount">0</div>
+                    <div style="font-size: 1.1rem; opacity: 0.9;">Tổng Giáo Viên</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 8px;" id="statsStudentFaces">0</div>
+                    <div style="font-size: 1.1rem; opacity: 0.9;">Ảnh HS Đã Đăng Ký</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 8px;" id="statsTeacherFaces">0</div>
+                    <div style="font-size: 1.1rem; opacity: 0.9;">Ảnh GV Đã Đăng Ký</div>
+                </div>
+            </div>
+
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px;">
+                <h3 style="color: #0078d4; margin-top: 0;">📊 Thông Tin Chi Tiết</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <h4 style="color: #667eea; margin: 0 0 10px 0;">ℹ️ Học Sinh</h4>
+                        <p style="margin: 8px 0; color: #4b5563;">
+                            <strong>Tổng:</strong> <span id="detailStudentTotal">0</span>
+                        </p>
+                        <p style="margin: 8px 0; color: #4b5563;">
+                            <strong>Đã Đăng Ký:</strong> <span id="detailStudentRegistered">0</span>
+                        </p>
+                        <p style="margin: 8px 0; color: #4b5563;">
+                            <strong>Tỉ Lệ:</strong> <span id="detailStudentPercentage">0%</span>
+                        </p>
+                    </div>
+
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #f093fb;">
+                        <h4 style="color: #f093fb; margin: 0 0 10px 0;">ℹ️ Giáo Viên</h4>
+                        <p style="margin: 8px 0; color: #4b5563;">
+                            <strong>Tổng:</strong> <span id="detailTeacherTotal">0</span>
+                        </p>
+                        <p style="margin: 8px 0; color: #4b5563;">
+                            <strong>Đã Đăng Ký:</strong> <span id="detailTeacherRegistered">0</span>
+                        </p>
+                        <p style="margin: 8px 0; color: #4b5563;">
+                            <strong>Tỉ Lệ:</strong> <span id="detailTeacherPercentage">0%</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="refreshStatistics()" style="margin-top: 20px; width: 100%; background: #0078d4;">
+                <i class="fas fa-sync"></i> Làm Mới Thống Kê
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Check localStorage availability
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+        } catch (e) {
+            alert('LocalStorage không khả dụng. Vui lòng mở file qua HTTP server.');
+            throw new Error('LocalStorage not available');
+        }
+
+        // Global state
+        let isRecognizing = false;
+        let isRegistering = false;
+        let currentStudent = null;
+        let faceRecognitionStream = null;
+        let registrationStream = null;
+        let lastDetectionTime = 0;
+        let detectionCooldown = 2000; // 2 seconds between notifications
+        let detectedFaceCount = 0;
+        let recognizedStudents = {}; // Track recognized students to show notification only once
+        
+        // Teacher recognition state
+        let isTeacherRecognizing = false;
+        let isTeacherRegistering = false;
+        let currentTeacher = null;
+        let teacherFaceRecognitionStream = null;
+        let teacherRegistrationStream = null;
+        let lastTeacherDetectionTime = 0;
+        let recognizedTeachers = {};
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudents();
+            loadTeachers();
+            loadFaceDatabase();
+            loadTeacherFaceDatabase();
+            refreshStatistics();
+            
+            // Setup image upload preview for students
+            document.getElementById('imageUploadFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const preview = document.getElementById('uploadPreview');
+                        preview.innerHTML = `
+                            <div style="margin-top: 10px;">
+                                <img src="${event.target.result}" style="max-width: 200px; border-radius: 8px; border: 2px solid #3b82f6;">
+                                <p style="color: #4b7399; font-size: 0.9rem;">Ảnh đã chọn: ${file.name}</p>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Setup image upload preview for teachers
+            document.getElementById('imageUploadTeacherFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const preview = document.getElementById('uploadTeacherPreview');
+                        preview.innerHTML = `
+                            <div style="margin-top: 10px;">
+                                <img src="${event.target.result}" style="max-width: 200px; border-radius: 8px; border: 2px solid #f59e0b;">
+                                <p style="color: #92400e; font-size: 0.9rem;">Ảnh đã chọn: ${file.name}</p>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // ==================== NOTIFICATION SYSTEM ====================
+        function showNotification(title, message, type = 'info', duration = 4000) {
+            const container = document.getElementById('notificationContainer');
+            
+            const notificationEl = document.createElement('div');
+            notificationEl.className = `toast-notification ${type}`;
+            
+            let icon = 'fas fa-info-circle';
+            if (type === 'success') icon = 'fas fa-check-circle';
+            else if (type === 'warning') icon = 'fas fa-exclamation-circle';
+            else if (type === 'error') icon = 'fas fa-times-circle';
+            
+            notificationEl.innerHTML = `
+                <i class="toast-icon ${type} fas ${icon}"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(notificationEl);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (notificationEl.parentElement) {
+                        notificationEl.classList.add('removing');
+                        setTimeout(() => notificationEl.remove(), 300);
+                    }
+                }, duration);
+            }
+            
+            playNotificationSound(type);
+        }
+
+        // Show prominent student recognition notification
+        function showStudentRecognitionNotification(student) {
+            const container = document.getElementById('notificationContainer');
+            
+            const notificationEl = document.createElement('div');
+            notificationEl.className = 'toast-notification success';
+            notificationEl.style.maxWidth = '550px';
+            notificationEl.style.padding = '0';
+            notificationEl.style.overflow = 'hidden';
+            
+            const timestamp = new Date().toLocaleTimeString('vi-VN');
+            const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+            const studentImage = faceDb[student.id]?.[0]?.imageData || null;
+            
+            notificationEl.innerHTML = `
+                <div style="display: flex; width: 100%; height: 100%;">
+                    ${studentImage ? `<div style="flex-shrink: 0; width: 80px; height: 100px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                        <img src="${studentImage}" style="width: 100%; height: 100%; object-fit: cover;" alt="${student.name}">
+                    </div>` : ''}
+                    <div style="flex: 1; padding: 16px 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-check-circle" style="color: #10b981; font-size: 1.3rem;"></i>
+                                <div style="color: #10b981; font-weight: 700; font-size: 0.95rem;">NHẬN DIỆN THÀNH CÔNG</div>
+                            </div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #065f46; margin-bottom: 8px; text-transform: uppercase;">
+                                ${student.name}
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; color: #4b5563;">
+                                <div><span style="font-weight: 600; color: #2d3748;">Lớp:</span> ${student.class}</div>
+                                <div><span style="font-weight: 600; color: #2d3748;">Mã:</span> ${student.id}</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #9ca3af; margin-top: 8px;">
+                            <i class="fas fa-clock" style="margin-right: 4px;"></i> ${timestamp}
+                        </div>
+                    </div>
+                </div>
+                <button class="toast-close" style="position: absolute; right: 8px; top: 8px; z-index: 10;" onclick="this.closest('.toast-notification').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(notificationEl);
+            
+            setTimeout(() => {
+                if (notificationEl.parentElement) {
+                    notificationEl.classList.add('removing');
+                    setTimeout(() => notificationEl.remove(), 300);
+                }
+            }, 6000);
+            
+            playNotificationSound('success');
+        }
+
+        function playNotificationSound(type = 'info') {
+            try {
+                // Create audio feedback using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'success') {
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } else if (type === 'error') {
+                    oscillator.frequency.value = 400;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } else {
+                    oscillator.frequency.value = 600;
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                }
+            } catch (e) {
+                console.log('Audio notification not available');
+            }
+        }
+
+        // Tab switching
+        function switchTab(button, tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            
+            button.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Update threshold display
+        function updateThresholdDisplay() {
+            const value = document.getElementById('confidenceThreshold').value;
+            document.getElementById('thresholdDisplay').textContent = Math.round(value * 100) + '%';
+        }
+
+        // Load students from localStorage
+        function loadStudents() {
+            try {
+                const students = JSON.parse(localStorage.getItem('students') || '[]');
+                if (students.length === 0) {
+                    const defaultStudents = [
+                        { id: 'HS001', name: 'Nguyễn Văn A', class: 'A1', dob: '2010-01-15' },
+                        { id: 'HS002', name: 'Trần Thị B', class: 'A1', dob: '2010-02-20' },
+                        { id: 'HS003', name: 'Hoàng Văn C', class: 'A2', dob: '2010-03-10' },
+                        { id: 'HS004', name: 'Phạm Thị D', class: 'A2', dob: '2010-04-05' }
+                    ];
+                    localStorage.setItem('students', JSON.stringify(defaultStudents));
+                }
+                populateStudentSelect();
+            } catch (e) {
+                console.error('Error loading students:', e);
+            }
+        }
+
+        // Populate student select
+        function populateStudentSelect() {
+            const students = JSON.parse(localStorage.getItem('students') || '[]');
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+            
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.name} (${student.class})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Load teachers from localStorage
+        function loadTeachers() {
+            try {
+                let teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+                if (teachers.length === 0) {
+                    // Try to get teachers from rooms (phong-o data)
+                    const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+                    if (rooms.length > 0) {
+                        // Extract unique teachers from rooms
+                        const teacherMap = new Map();
+                        rooms.forEach((room, index) => {
+                            if (room.teacherName && !teacherMap.has(room.teacherName)) {
+                                teacherMap.set(room.teacherName, {
+                                    id: `GV${String(index + 1).padStart(3, '0')}`,
+                                    name: room.teacherName,
+                                    department: room.department || 'Không xác định',
+                                    phone: room.teacherPhone || '',
+                                    email: room.teacherEmail || `${room.teacherName.toLowerCase().replace(/\s+/g, '.')}@school.edu.vn`,
+                                    image: room.teacherImage || ''
+                                });
+                            }
+                        });
+                        teachers = Array.from(teacherMap.values());
+                        localStorage.setItem('teachers', JSON.stringify(teachers));
+                    } else {
+                        // Use default teachers if no rooms exist
+                        const defaultTeachers = [
+                            { id: 'GV001', name: 'Nguyễn Thị Hà', department: 'Toán', phone: '987013380', email: 'ha.nguyen@school.edu.vn' },
+                            { id: 'GV002', name: 'Lê Thị Hường', department: 'Văn', phone: '975605814', email: 'huong.le@school.edu.vn' },
+                            { id: 'GV003', name: 'Nguyễn Văn Bằng', department: 'Anh', phone: '0912345678', email: 'bang.nguyen@school.edu.vn' }
+                        ];
+                        localStorage.setItem('teachers', JSON.stringify(defaultTeachers));
+                    }
+                }
+                populateTeacherSelect();
+            } catch (e) {
+                console.error('Error loading teachers:', e);
+            }
+        }
+
+        // Populate teacher select
+        function populateTeacherSelect() {
+            const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+            const select = document.getElementById('teacherSelect');
+            if (select) {
+                select.innerHTML = '<option value="">-- Chọn giáo viên --</option>';
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = `${teacher.name} (${teacher.department})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // Get teacher name by ID
+        function getTeacherName(teacherId) {
+            const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+            const teacher = teachers.find(t => t.id === teacherId);
+            return teacher ? teacher.name : 'Không xác định';
+        }
+
+        // ==================== FACE RECOGNITION ====================
+        async function startRecognition() {
+            try {
+                const video = document.getElementById('video');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: 600, height: 500 }
+                });
+                video.srcObject = stream;
+                faceRecognitionStream = stream;
+                isRecognizing = true;
+                detectedFaceCount = 0;
+                
+                showNotification(
+                    'Camera Đã Bắt Đầu',
+                    'Camera đã được kích hoạt. Hệ thống đang quét để tìm khuôn mặt...',
+                    'info'
+                );
+                
+                // Wait for video to load then start detection
+                setTimeout(() => {
+                    detectFaces();
+                }, 500);
+            } catch (e) {
+                showNotification(
+                    'Lỗi Camera',
+                    'Không thể truy cập camera: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // Stop recognition
+        function stopRecognition() {
+            isRecognizing = false;
+            if (faceRecognitionStream) {
+                faceRecognitionStream.getTracks().forEach(track => track.stop());
+                document.getElementById('video').srcObject = null;
+            }
+            
+            showNotification(
+                'Camera Đã Dừng',
+                `Đã phát hiện ${detectedFaceCount} khuôn mặt trong phiên này.`,
+                'info'
+            );
+        }
+
+        // Test face recognition with random student
+        function testFaceRecognition() {
+            const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+            const students = JSON.parse(localStorage.getItem('students') || '[]');
+            
+            if (Object.keys(faceDb).length === 0) {
+                showNotification(
+                    '⚠ Cơ Sở Dữ Liệu Trống',
+                    'Chưa có khuôn mặt nào được đăng ký. Vui lòng đăng ký khuôn mặt trước.',
+                    'warning'
+                );
+                return;
+            }
+            
+            if (students.length === 0) {
+                showNotification(
+                    '⚠ Không Có Học Sinh',
+                    'Vui lòng thêm học sinh vào hệ thống.',
+                    'warning'
+                );
+                return;
+            }
+            
+            // Random select a student
+            const randomStudent = students[Math.floor(Math.random() * students.length)];
+            
+            showNotification(
+                '🧪 Kiểm Tra',
+                `Đang kiểm tra thông báo nhận diện với ${randomStudent.name}...`,
+                'info',
+                2000
+            );
+            
+            // Show recognition notification after 1 second
+            setTimeout(() => {
+                detectedFaceCount++;
+                showStudentRecognitionNotification(randomStudent);
+                displayRecognitionResult(randomStudent);
+            }, 1000);
+        }
+
+        // Detect faces in video
+        async function detectFaces() {
+            if (!isRecognizing) return;
+
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Ensure canvas has correct dimensions
+            if (video.videoWidth && video.videoHeight) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            } else {
+                canvas.width = 600;
+                canvas.height = 500;
+            }
+
+            try {
+                // Draw video frame
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Detect face areas
+                const faceAreas = detectFaceAreas(canvas);
+                
+                if (faceAreas.length > 0) {
+                    const now = Date.now();
+                    // Reduced cooldown to 3 seconds for easier testing
+                    if (now - lastDetectionTime > 3000) {
+                        detectedFaceCount += faceAreas.length;
+                        lastDetectionTime = now;
+                        
+                        // Draw rectangles around detected faces with YELLOW color
+                        faceAreas.forEach((area, index) => {
+                            ctx.strokeStyle = '#FFD700'; // Yellow frame
+                            ctx.lineWidth = 3;
+                            ctx.strokeRect(area.x, area.y, area.width, area.height);
+                            
+                            // Try to match with registered faces
+                            matchFaceWithDatabase(area);
+                        });
+                    } else {
+                        // Draw rectangles without notification (yellow as well)
+                        faceAreas.forEach(area => {
+                            ctx.strokeStyle = '#FFD700'; // Yellow frame
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(area.x, area.y, area.width, area.height);
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error detecting faces:', e);
+            }
+
+            if (isRecognizing) {
+                requestAnimationFrame(detectFaces);
+            }
+        }
+
+        // Improved face area detection
+        function detectFaceAreas(canvas) {
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            const areas = [];
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Divide canvas into grid and find face-like regions
+            const gridSize = 80;
+            const threshold = 150; // Lower threshold for easier detection
+            
+            for (let y = 0; y < height - gridSize; y += gridSize) {
+                for (let x = 0; x < width - gridSize; x += gridSize) {
+                    let totalBrightness = 0;
+                    let count = 0;
+                    let hasContrast = false;
+                    
+                    // Sample pixels in the grid
+                    for (let dy = 0; dy < gridSize; dy += 8) {
+                        for (let dx = 0; dx < gridSize; dx += 8) {
+                            const px = x + dx;
+                            const py = y + dy;
+                            
+                            if (px < width && py < height) {
+                                const idx = (py * width + px) * 4;
+                                const r = data[idx];
+                                const g = data[idx + 1];
+                                const b = data[idx + 2];
+                                const brightness = (r + g + b) / 3;
+                                
+                                totalBrightness += brightness;
+                                count++;
+                                
+                                // Check for color variation (indicates a real image)
+                                if (Math.abs(r - g) > 10 || Math.abs(g - b) > 10) {
+                                    hasContrast = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    const avgBrightness = count > 0 ? totalBrightness / count : 0;
+                    
+                    // Detect if this region looks like a face
+                    if (avgBrightness > threshold && hasContrast) {
+                        areas.push({
+                            x: x,
+                            y: y,
+                            width: gridSize,
+                            height: gridSize,
+                            brightness: avgBrightness
+                        });
+                    }
+                }
+            }
+            
+            return areas;
+        }
+
+        // Match face with database
+        function matchFaceWithDatabase(area) {
+            const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+            const students = JSON.parse(localStorage.getItem('students') || '[]');
+            
+            if (Object.keys(faceDb).length === 0) {
+                showNotification(
+                    '⚠ Cơ Sở Dữ Liệu Trống',
+                    'Chưa có khuôn mặt nào được đăng ký. Vui lòng đăng ký khuôn mặt trước.',
+                    'warning',
+                    3000
+                );
+                return;
+            }
+            
+            // Simulate matching - randomly select a match (in real app, use ML model)
+            const registeredStudentIds = Object.keys(faceDb);
+            if (registeredStudentIds.length > 0) {
+                const randomId = registeredStudentIds[Math.floor(Math.random() * registeredStudentIds.length)];
+                const student = students.find(s => s.id === randomId);
+                
+                if (student) {
+                    // Only show notification if this student hasn't been recognized recently
+                    const now = Date.now();
+                    const lastRecognition = recognizedStudents[student.id] || 0;
+                    
+                    // Show notification only if more than 10 seconds since last recognition of this student
+                    if (now - lastRecognition > 10000) {
+                        recognizedStudents[student.id] = now;
+                        
+                        // Show prominent student recognition notification
+                        showStudentRecognitionNotification(student);
+                        
+                        // Display detailed results
+                        displayRecognitionResult(student);
+                    }
+                }
+            }
+        }
+
+        // Display recognition result
+        function displayRecognitionResult(student) {
+            const resultsDiv = document.getElementById('recognitionResults');
+            const resultHTML = `
+                <div class="result-item success">
+                    <h4 style="margin: 0 0 10px 0; color: #065f46;">✓ Nhận Diện Thành Công</h4>
+                    <p style="margin: 8px 0;"><strong>Tên:</strong> ${student.name}</p>
+                    <p style="margin: 8px 0;"><strong>Lớp:</strong> ${student.class}</p>
+                    <p style="margin: 8px 0;"><strong>Mã:</strong> ${student.id}</p>
+                    <p style="margin: 8px 0; color: #6b7280; font-size: 0.9rem;">
+                        <i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('vi-VN')}
+                    </p>
+                </div>
+            `;
+            
+            resultsDiv.insertAdjacentHTML('afterbegin', resultHTML);
+            
+            // Keep only last 5 results
+            const resultItems = resultsDiv.querySelectorAll('.result-item');
+            if (resultItems.length > 5) {
+                resultItems[resultItems.length - 1].remove();
+            }
+        }
+
+        // ==================== FACE REGISTRATION ====================
+        async function startRegistration() {
+            const studentId = document.getElementById('studentSelect').value;
+            if (!studentId) {
+                showNotification(
+                    'Lỗi',
+                    'Vui lòng chọn học sinh',
+                    'error'
+                );
+                return;
+            }
+
+            try {
+                const video = document.getElementById('registrationVideo');
+                const container = document.getElementById('registrationVideoContainer');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: 600, height: 500 }
+                });
+                video.srcObject = stream;
+                registrationStream = stream;
+                isRegistering = true;
+                container.style.display = 'block';
+                document.getElementById('captureBtn').disabled = false;
+                currentStudent = studentId;
+                
+                showNotification(
+                    'Camera Đã Bắt Đầu',
+                    `Chuẩn bị đăng ký khuôn mặt cho ${getStudentName(studentId)}`,
+                    'info'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi Camera',
+                    'Không thể truy cập camera: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // Stop registration
+        function stopRegistration() {
+            isRegistering = false;
+            if (registrationStream) {
+                registrationStream.getTracks().forEach(track => track.stop());
+                document.getElementById('registrationVideo').srcObject = null;
+                document.getElementById('registrationVideoContainer').style.display = 'none';
+            }
+            document.getElementById('captureBtn').disabled = true;
+            
+            showNotification(
+                'Camera Đã Dừng',
+                'Đóng camera đăng ký khuôn mặt',
+                'info'
+            );
+        }
+
+        // Capture and register face
+        async function captureAndRegister() {
+            const video = document.getElementById('registrationVideo');
+            const canvas = document.getElementById('registrationCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            const imageData = canvas.toDataURL('image/jpeg');
+            
+            try {
+                const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+                if (!faceDb[currentStudent]) {
+                    faceDb[currentStudent] = [];
+                }
+                
+                faceDb[currentStudent].push({
+                    timestamp: new Date().toISOString(),
+                    imageData: imageData
+                });
+                
+                localStorage.setItem('faceDatabase', JSON.stringify(faceDb));
+                
+                showNotification(
+                    '✓ Đã Lưu Khuôn Mặt',
+                    `Học sinh: <strong>${getStudentName(currentStudent)}</strong><br/>Tổng ảnh: ${faceDb[currentStudent].length}`,
+                    'success',
+                    4000
+                );
+                
+                // Show preview
+                const preview = document.getElementById('capturedPreview');
+                preview.innerHTML = `
+                    <div style="text-align: center; margin-top: 20px;">
+                        <h3 style="color: #10b981;">✓ Đã Lưu Khuôn Mặt</h3>
+                        <img src="${imageData}" style="max-width: 300px; border-radius: 8px; margin-top: 10px;">
+                        <p>Học sinh: <strong>${getStudentName(currentStudent)}</strong></p>
+                        <small style="color: #6b7280;">Tổng ảnh đã đăng ký: ${faceDb[currentStudent].length}</small>
+                    </div>
+                `;
+                loadFaceDatabase();
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi khi lưu khuôn mặt: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // Upload image to database
+        function uploadImageToDatabase() {
+            const studentId = document.getElementById('studentSelect').value;
+            if (!studentId) {
+                showNotification(
+                    'Lỗi',
+                    'Vui lòng chọn học sinh',
+                    'error'
+                );
+                return;
+            }
+
+            const fileInput = document.getElementById('imageUploadFile');
+            if (!fileInput.files || !fileInput.files[0]) {
+                showNotification(
+                    'Lỗi',
+                    'Vui lòng chọn ảnh',
+                    'error'
+                );
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                try {
+                    const imageData = event.target.result;
+                    const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+                    
+                    if (!faceDb[studentId]) {
+                        faceDb[studentId] = [];
+                    }
+                    
+                    faceDb[studentId].push({
+                        timestamp: new Date().toISOString(),
+                        imageData: imageData
+                    });
+                    
+                    localStorage.setItem('faceDatabase', JSON.stringify(faceDb));
+                    
+                    showNotification(
+                        '✓ Đã Tải Ảnh Thành Công',
+                        `Học sinh: <strong>${getStudentName(studentId)}</strong><br/>Tổng ảnh: ${faceDb[studentId].length}`,
+                        'success',
+                        4000
+                    );
+                    
+                    // Clear file input and preview
+                    fileInput.value = '';
+                    document.getElementById('uploadPreview').innerHTML = '';
+                    loadFaceDatabase();
+                } catch (e) {
+                    showNotification(
+                        'Lỗi',
+                        'Lỗi khi tải ảnh: ' + e.message,
+                        'error'
+                    );
+                }
+            };
+
+            reader.onerror = function() {
+                showNotification(
+                    'Lỗi',
+                    'Không thể đọc ảnh',
+                    'error'
+                );
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // Get student name by ID
+        function getStudentName(studentId) {
+            const students = JSON.parse(localStorage.getItem('students') || '[]');
+            const student = students.find(s => s.id === studentId);
+            return student ? student.name : 'Không xác định';
+        }
+
+        // Load face database
+        function loadFaceDatabase() {
+            try {
+                const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+                const students = JSON.parse(localStorage.getItem('students') || '[]');
+                
+                let tableHTML = '<table><thead><tr><th>Học Sinh</th><th>Lớp</th><th>Số Ảnh</th><th>Cập Nhật Lần Cuối</th><th>Hành Động</th></tr></thead><tbody>';
+                
+                students.forEach(student => {
+                    const faces = faceDb[student.id] || [];
+                    const lastUpdate = faces.length > 0 ? new Date(faces[faces.length - 1].timestamp).toLocaleString('vi-VN') : 'Chưa đăng ký';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${student.name}</td>
+                            <td>${student.class}</td>
+                            <td><span class="status-badge recognized">${faces.length}</span></td>
+                            <td>${lastUpdate}</td>
+                            <td>
+                                <button class="btn-secondary" onclick="viewFaceGallery('${student.id}')" style="padding: 6px 12px; font-size: 0.9rem;">Xem</button>
+                                <button class="btn-warning" onclick="deleteFace('${student.id}')" style="padding: 6px 12px; font-size: 0.9rem; background: #ef4444;">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                document.getElementById('databaseTable').innerHTML = tableHTML;
+            } catch (e) {
+                console.error('Error loading face database:', e);
+            }
+        }
+
+        // View face gallery
+        function viewFaceGallery(studentId) {
+            const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+            const faces = faceDb[studentId] || [];
+            
+            if (faces.length === 0) {
+                showNotification(
+                    'Thông Báo',
+                    'Không có ảnh khuôn mặt nào được đăng ký',
+                    'warning'
+                );
+                return;
+            }
+            
+            let html = `<div style="margin-top: 20px;">
+                <h3>${getStudentName(studentId)}</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">`;
+            
+            faces.forEach((face, idx) => {
+                html += `<img src="${face.imageData}" style="width: 100%; border-radius: 8px; cursor: pointer;" onclick="alert('Ảnh ${idx + 1} - ${new Date(face.timestamp).toLocaleString('vi-VN')}')" />`;
+            });
+            
+            html += '</div></div>';
+            document.getElementById('databaseTable').innerHTML = html;
+            
+            showNotification(
+                'Thư Viện Ảnh',
+                `Hiển thị ${faces.length} ảnh của ${getStudentName(studentId)}`,
+                'info',
+                2000
+            );
+        }
+
+        // Delete face
+        function deleteFace(studentId) {
+            if (!confirm('Xác nhận xóa tất cả khuôn mặt của học sinh này?')) return;
+            
+            try {
+                const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+                delete faceDb[studentId];
+                localStorage.setItem('faceDatabase', JSON.stringify(faceDb));
+                loadFaceDatabase();
+                
+                showNotification(
+                    '✓ Đã Xóa',
+                    `Xóa khuôn mặt của ${getStudentName(studentId)}`,
+                    'success'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // Clear all faces
+        function clearAllFaces() {
+            if (!confirm('Xác nhận xóa TẤT CẢ khuôn mặt? Hành động này không thể hoàn tác!')) return;
+            
+            try {
+                localStorage.setItem('faceDatabase', '{}');
+                loadFaceDatabase();
+                showNotification(
+                    '✓ Đã Xóa',
+                    'Đã xóa tất cả khuôn mặt',
+                    'success'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // Export database
+        function exportDatabase() {
+            try {
+                const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+                const students = JSON.parse(localStorage.getItem('students') || '[]');
+                
+                let data = 'Học Sinh,Lớp,Số Ảnh Đăng Ký\n';
+                students.forEach(student => {
+                    const faces = faceDb[student.id] || [];
+                    data += `"${student.name}","${student.class}",${faces.length}\n`;
+                });
+                
+                const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'face_database_' + new Date().getTime() + '.csv';
+                link.click();
+                
+                showNotification(
+                    '✓ Xuất Thành Công',
+                    'Dữ liệu khuôn mặt đã được xuất',
+                    'success'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi khi xuất dữ liệu: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // ==================== TEACHER RECOGNITION ====================
+        async function startTeacherRecognition() {
+            try {
+                const video = document.getElementById('teacherVideo');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: 600, height: 500 }
+                });
+                video.srcObject = stream;
+                teacherFaceRecognitionStream = stream;
+                isTeacherRecognizing = true;
+                detectedFaceCount = 0;
+                
+                showNotification(
+                    'Camera Đã Bắt Đầu',
+                    'Camera đã được kích hoạt. Hệ thống đang quét để tìm khuôn mặt giáo viên...',
+                    'info'
+                );
+                
+                setTimeout(() => {
+                    detectTeacherFaces();
+                }, 500);
+            } catch (err) {
+                showNotification(
+                    '❌ Lỗi Camera',
+                    'Không thể truy cập camera: ' + err.message,
+                    'error'
+                );
+            }
+        }
+
+        function stopTeacherRecognition() {
+            if (teacherFaceRecognitionStream) {
+                teacherFaceRecognitionStream.getTracks().forEach(track => track.stop());
+            }
+            isTeacherRecognizing = false;
+            detectedFaceCount = 0;
+            
+            showNotification(
+                'Camera Đã Dừng',
+                `Đã phát hiện ${detectedFaceCount} khuôn mặt trong phiên này.`,
+                'info'
+            );
+        }
+
+        async function detectTeacherFaces() {
+            if (!isTeacherRecognizing) return;
+            
+            const video = document.getElementById('teacherVideo');
+            const canvas = document.getElementById('teacherCanvas');
+            
+            if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+                requestAnimationFrame(detectTeacherFaces);
+                return;
+            }
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // Simple face detection using brightness analysis
+            const gridSize = 80;
+            const detected = [];
+            
+            for (let y = 0; y < canvas.height - gridSize; y += gridSize) {
+                for (let x = 0; x < canvas.width - gridSize; x += gridSize) {
+                    let brightness = 0;
+                    let pixelCount = 0;
+                    
+                    for (let dy = 0; dy < gridSize; dy++) {
+                        for (let dx = 0; dx < gridSize; dx++) {
+                            const idx = ((y + dy) * canvas.width + (x + dx)) * 4;
+                            const r = data[idx];
+                            const g = data[idx + 1];
+                            const b = data[idx + 2];
+                            brightness += (r + g + b) / 3;
+                            pixelCount++;
+                        }
+                    }
+                    
+                    brightness /= pixelCount;
+                    if (brightness > 150) {
+                        detected.push({ x, y });
+                        ctx.strokeStyle = '#FFD700'; // Yellow for teacher detection
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(x, y, gridSize, gridSize);
+                    }
+                }
+            }
+            
+            if (detected.length > 0) {
+                detectedFaceCount = detected.length;
+                matchTeacherWithDatabase(detected);
+            }
+            
+            requestAnimationFrame(detectTeacherFaces);
+        }
+
+        function matchTeacherWithDatabase(detected) {
+            const now = Date.now();
+            
+            if (now - lastTeacherDetectionTime < 3000) return;
+            lastTeacherDetectionTime = now;
+            
+            const teacherDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+            const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+            
+            teachers.forEach(teacher => {
+                const teacherFaces = teacherDb[teacher.id] || [];
+                if (teacherFaces.length > 0 && detected.length > 0) {
+                    const now = Date.now();
+                    const lastRecognition = recognizedTeachers[teacher.id] || 0;
+                    
+                    if (now - lastRecognition > 10000) {
+                        recognizedTeachers[teacher.id] = now;
+                        showTeacherRecognitionNotification(teacher);
+                    }
+                }
+            });
+        }
+
+        function showTeacherRecognitionNotification(teacher) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = 'toast notification success';
+            
+            notification.innerHTML = `
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div style="flex-shrink: 0;">
+                        <i class="fas fa-chalkboard-user" style="font-size: 2.5rem; color: #f093fb;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="margin: 0 0 8px 0; color: #f093fb; font-size: 1.3rem;">✓ Nhận Diện Thành Công</h2>
+                        <p style="margin: 0; font-size: 1.4rem; font-weight: bold; color: #1f2937; text-transform: uppercase;">${teacher.name}</p>
+                        <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 1rem;">
+                            <i class="fas fa-briefcase"></i> ${teacher.department}
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            playAudio('success');
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 6000);
+        }
+
+        function testTeacherRecognition() {
+            const teacherDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+            const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+            
+            if (Object.keys(teacherDb).length === 0) {
+                showNotification(
+                    '⚠ Cơ Sở Dữ Liệu Trống',
+                    'Chưa có khuôn mặt giáo viên nào được đăng ký. Vui lòng đăng ký trước.',
+                    'warning'
+                );
+                return;
+            }
+            
+            if (teachers.length === 0) {
+                showNotification(
+                    '⚠ Không Có Giáo Viên',
+                    'Vui lòng thêm giáo viên vào hệ thống.',
+                    'warning'
+                );
+                return;
+            }
+            
+            const randomTeacher = teachers[Math.floor(Math.random() * teachers.length)];
+            showTeacherRecognitionNotification(randomTeacher);
+        }
+
+        // ==================== TEACHER REGISTRATION ====================
+        async function startTeacherRegistration() {
+            const teacherId = document.getElementById('teacherSelect').value;
+            if (!teacherId) {
+                showNotification(
+                    '⚠ Chọn Giáo Viên',
+                    'Vui lòng chọn giáo viên trước khi bắt đầu camera.',
+                    'warning'
+                );
+                return;
+            }
+            
+            try {
+                const videoContainer = document.getElementById('teacherRegistrationVideoContainer');
+                videoContainer.style.display = 'block';
+                
+                const video = document.getElementById('teacherRegistrationVideo');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: 600, height: 500 }
+                });
+                
+                video.srcObject = stream;
+                teacherRegistrationStream = stream;
+                isTeacherRegistering = true;
+                
+                document.getElementById('captureTeacherBtn').disabled = false;
+                
+                showNotification(
+                    'Camera Đã Bắt Đầu',
+                    `Camera đã được kích hoạt cho: ${document.getElementById('teacherSelect').options[document.getElementById('teacherSelect').selectedIndex].text}`,
+                    'info'
+                );
+            } catch (err) {
+                showNotification(
+                    '❌ Lỗi Camera',
+                    'Không thể truy cập camera: ' + err.message,
+                    'error'
+                );
+            }
+        }
+
+        function stopTeacherRegistration() {
+            if (teacherRegistrationStream) {
+                teacherRegistrationStream.getTracks().forEach(track => track.stop());
+            }
+            isTeacherRegistering = false;
+            
+            document.getElementById('teacherRegistrationVideoContainer').style.display = 'none';
+            document.getElementById('captureTeacherBtn').disabled = true;
+            
+            showNotification(
+                'Camera Đã Dừng',
+                'Camera đã được tắt.',
+                'info'
+            );
+        }
+
+        function captureAndRegisterTeacher() {
+            const teacherId = document.getElementById('teacherSelect').value;
+            if (!teacherId) {
+                showNotification(
+                    '⚠ Lỗi',
+                    'Vui lòng chọn giáo viên.',
+                    'warning'
+                );
+                return;
+            }
+            
+            const video = document.getElementById('teacherRegistrationVideo');
+            const canvas = document.getElementById('teacherRegistrationCanvas');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = canvas.toDataURL('image/png');
+            
+            let teacherFaceDb = {};
+            try {
+                teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+            } catch (e) {
+                teacherFaceDb = {};
+            }
+            
+            if (!teacherFaceDb[teacherId]) {
+                teacherFaceDb[teacherId] = [];
+            }
+            
+            teacherFaceDb[teacherId].push({
+                timestamp: new Date().toISOString(),
+                imageData: imageData
+            });
+            
+            localStorage.setItem('teacherFaceDatabase', JSON.stringify(teacherFaceDb));
+            
+            const preview = document.getElementById('capturedTeacherPreview');
+            const teacherName = getTeacherName(teacherId);
+            preview.innerHTML = `
+                <div style="margin-top: 20px; text-align: center;">
+                    <img src="${imageData}" style="max-width: 300px; border-radius: 8px; border: 3px solid #f093fb; margin-bottom: 15px;">
+                    <p style="color: #34d399; font-weight: bold; margin: 0;">✓ Đã chụp ảnh cho giáo viên: ${teacherName}</p>
+                    <p style="color: #6b7280; margin: 5px 0 0 0;">Tổng ảnh đã đăng ký: ${teacherFaceDb[teacherId].length}</p>
+                </div>
+            `;
+            
+            showNotification(
+                '✓ Đã Lưu Ảnh',
+                `Giáo viên: <strong>${teacherName}</strong><br/>Tổng ảnh: ${teacherFaceDb[teacherId].length}`,
+                'success',
+                4000
+            );
+            
+            loadTeacherFaceDatabase();
+            refreshStatistics();
+        }
+
+        function uploadTeacherImageToDatabase() {
+            const teacherId = document.getElementById('teacherSelect').value;
+            if (!teacherId) {
+                showNotification(
+                    '⚠ Lỗi',
+                    'Vui lòng chọn giáo viên.',
+                    'warning'
+                );
+                return;
+            }
+            
+            const fileInput = document.getElementById('imageUploadTeacherFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification(
+                    '⚠ Chưa Chọn Ảnh',
+                    'Vui lòng chọn ảnh từ máy tính.',
+                    'warning'
+                );
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                try {
+                    let teacherFaceDb = {};
+                    try {
+                        teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+                    } catch (e) {
+                        teacherFaceDb = {};
+                    }
+                    
+                    if (!teacherFaceDb[teacherId]) {
+                        teacherFaceDb[teacherId] = [];
+                    }
+                    
+                    teacherFaceDb[teacherId].push({
+                        timestamp: new Date().toISOString(),
+                        imageData: event.target.result
+                    });
+                    
+                    localStorage.setItem('teacherFaceDatabase', JSON.stringify(teacherFaceDb));
+                    
+                    showNotification(
+                        '✓ Đã Tải Ảnh Thành Công',
+                        `Giáo viên: <strong>${getTeacherName(teacherId)}</strong><br/>Tổng ảnh: ${teacherFaceDb[teacherId].length}`,
+                        'success',
+                        4000
+                    );
+                    
+                    fileInput.value = '';
+                    document.getElementById('uploadTeacherPreview').innerHTML = '';
+                    loadTeacherFaceDatabase();
+                    refreshStatistics();
+                } catch (e) {
+                    showNotification(
+                        'Lỗi',
+                        'Lỗi khi tải ảnh: ' + e.message,
+                        'error'
+                    );
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification(
+                    'Lỗi',
+                    'Không thể đọc ảnh',
+                    'error'
+                );
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function loadTeacherFaceDatabase() {
+            try {
+                const teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+                const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+                
+                let tableHTML = '<table><thead><tr><th>Giáo Viên</th><th>Bộ Môn</th><th>Số Ảnh</th><th>Cập Nhật Lần Cuối</th><th>Hành Động</th></tr></thead><tbody>';
+                
+                teachers.forEach(teacher => {
+                    const faces = teacherFaceDb[teacher.id] || [];
+                    const lastUpdate = faces.length > 0 ? new Date(faces[faces.length - 1].timestamp).toLocaleString('vi-VN') : 'Chưa đăng ký';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${teacher.name}</td>
+                            <td>${teacher.department}</td>
+                            <td><span class="status-badge recognized">${faces.length}</span></td>
+                            <td>${lastUpdate}</td>
+                            <td>
+                                <button class="btn-secondary" onclick="viewTeacherFaceGallery('${teacher.id}')" style="padding: 6px 12px; font-size: 0.9rem;">Xem</button>
+                                <button class="btn-warning" onclick="deleteTeacherFace('${teacher.id}')" style="padding: 6px 12px; font-size: 0.9rem; background: #ef4444;">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                document.getElementById('teacherDatabaseTable').innerHTML = tableHTML;
+            } catch (e) {
+                console.error('Error loading teacher face database:', e);
+            }
+        }
+
+        function viewTeacherFaceGallery(teacherId) {
+            const teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+            const faces = teacherFaceDb[teacherId] || [];
+            
+            if (faces.length === 0) {
+                showNotification(
+                    '⚠ Chưa Đăng Ký',
+                    'Giáo viên này chưa có khuôn mặt nào được đăng ký.',
+                    'warning'
+                );
+                return;
+            }
+            
+            let galleryHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;">';
+            
+            faces.forEach((face, idx) => {
+                galleryHTML += `
+                    <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 10px;">
+                        <img src="${face.imageData}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px;">
+                        <p style="font-size: 0.85rem; color: #6b7280; margin: 8px 0 0 0; text-align: center;">
+                            ${new Date(face.timestamp).toLocaleString('vi-VN')}
+                        </p>
+                        <button class="btn-warning" onclick="deleteTeacherFaceImage('${teacherId}', ${idx})" style="width: 100%; padding: 6px; font-size: 0.8rem; margin-top: 8px; background: #ef4444;">Xóa</button>
+                    </div>
+                `;
+            });
+            
+            galleryHTML += '</div>';
+            
+            const modalHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+                    <div style="background: white; border-radius: 12px; padding: 30px; max-width: 900px; max-height: 80vh; overflow-y: auto;">
+                        <h2 style="margin: 0 0 20px 0; color: #1f2937;">Thư Viện Khuôn Mặt - ${getTeacherName(teacherId)}</h2>
+                        ${galleryHTML}
+                        <button class="btn-secondary" onclick="this.closest('div').parentElement.remove()" style="width: 100%; margin-top: 20px;">Đóng</button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.createElement('div');
+            modal.innerHTML = modalHTML;
+            document.body.appendChild(modal.firstElementChild);
+        }
+
+        function deleteTeacherFaceImage(teacherId, imageIndex) {
+            if (!confirm('Xác nhận xóa ảnh này?')) return;
+            
+            try {
+                let teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+                if (teacherFaceDb[teacherId]) {
+                    teacherFaceDb[teacherId].splice(imageIndex, 1);
+                    if (teacherFaceDb[teacherId].length === 0) {
+                        delete teacherFaceDb[teacherId];
+                    }
+                }
+                localStorage.setItem('teacherFaceDatabase', JSON.stringify(teacherFaceDb));
+                loadTeacherFaceDatabase();
+                refreshStatistics();
+                showNotification(
+                    '✓ Đã Xóa',
+                    'Ảnh đã được xóa',
+                    'success'
+                );
+                document.querySelector('[style*="position: fixed"]')?.parentElement?.remove();
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        function deleteTeacherFace(teacherId) {
+            if (!confirm('Xác nhận xóa tất cả khuôn mặt của giáo viên này?')) return;
+            
+            try {
+                let teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+                delete teacherFaceDb[teacherId];
+                localStorage.setItem('teacherFaceDatabase', JSON.stringify(teacherFaceDb));
+                loadTeacherFaceDatabase();
+                refreshStatistics();
+                
+                showNotification(
+                    '✓ Đã Xóa',
+                    `Xóa khuôn mặt của ${getTeacherName(teacherId)}`,
+                    'success'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        function clearAllTeacherFaces() {
+            if (!confirm('Xác nhận xóa TẤT CẢ khuôn mặt giáo viên? Hành động này không thể hoàn tác!')) return;
+            
+            try {
+                localStorage.setItem('teacherFaceDatabase', '{}');
+                loadTeacherFaceDatabase();
+                refreshStatistics();
+                showNotification(
+                    '✓ Đã Xóa',
+                    'Đã xóa tất cả khuôn mặt giáo viên',
+                    'success'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        function exportTeacherDatabase() {
+            try {
+                const teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+                const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+                
+                let data = 'Giáo Viên,Bộ Môn,Số Ảnh Đăng Ký\n';
+                teachers.forEach(teacher => {
+                    const faces = teacherFaceDb[teacher.id] || [];
+                    data += `"${teacher.name}","${teacher.department}",${faces.length}\n`;
+                });
+                
+                const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'teacher_face_database_' + new Date().getTime() + '.csv';
+                link.click();
+                
+                showNotification(
+                    '✓ Xuất Thành Công',
+                    'Dữ liệu giáo viên đã được xuất',
+                    'success'
+                );
+            } catch (e) {
+                showNotification(
+                    'Lỗi',
+                    'Lỗi khi xuất dữ liệu: ' + e.message,
+                    'error'
+                );
+            }
+        }
+
+        // ==================== STATISTICS ====================
+        function refreshStatistics() {
+            try {
+                const students = JSON.parse(localStorage.getItem('students') || '[]');
+                const teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+                const faceDb = JSON.parse(localStorage.getItem('faceDatabase') || '{}');
+                const teacherFaceDb = JSON.parse(localStorage.getItem('teacherFaceDatabase') || '{}');
+                
+                // Calculate stats
+                let studentFaceCount = 0;
+                let teacherFaceCount = 0;
+                let registeredStudents = 0;
+                let registeredTeachers = 0;
+                
+                Object.keys(faceDb).forEach(studentId => {
+                    if (faceDb[studentId].length > 0) {
+                        registeredStudents++;
+                        studentFaceCount += faceDb[studentId].length;
+                    }
+                });
+                
+                Object.keys(teacherFaceDb).forEach(teacherId => {
+                    if (teacherFaceDb[teacherId].length > 0) {
+                        registeredTeachers++;
+                        teacherFaceCount += teacherFaceDb[teacherId].length;
+                    }
+                });
+                
+                // Update stats display
+                document.getElementById('statsStudentCount').textContent = students.length;
+                document.getElementById('statsTeacherCount').textContent = teachers.length;
+                document.getElementById('statsStudentFaces').textContent = studentFaceCount;
+                document.getElementById('statsTeacherFaces').textContent = teacherFaceCount;
+                
+                document.getElementById('detailStudentTotal').textContent = students.length;
+                document.getElementById('detailStudentRegistered').textContent = registeredStudents;
+                document.getElementById('detailStudentPercentage').textContent = 
+                    students.length > 0 ? Math.round((registeredStudents / students.length) * 100) + '%' : '0%';
+                
+                document.getElementById('detailTeacherTotal').textContent = teachers.length;
+                document.getElementById('detailTeacherRegistered').textContent = registeredTeachers;
+                document.getElementById('detailTeacherPercentage').textContent = 
+                    teachers.length > 0 ? Math.round((registeredTeachers / teachers.length) * 100) + '%' : '0%';
+            } catch (e) {
+                console.error('Error refreshing statistics:', e);
+            }
+        }
+    </script>
+</body>
+</html>
