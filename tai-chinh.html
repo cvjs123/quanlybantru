@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tài Chính</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #e8f5e9 0%, #f1f8f6 100%);
+            padding: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover { background: #eeeeee; }
+        .tab-btn.active { color: #2E7D32; border-bottom-color: #2E7D32; }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .section-title { color: #2E7D32; border-bottom: 2px solid #2E7D32; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.3rem; }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background: #2E7D32; color: white; }
+        .btn-primary:hover { background: #1B5E20; transform: translateY(-2px); }
+
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-secondary:hover { background: #e0e0e0; }
+
+        .btn-danger { background: #f44336; color: white; }
+        .btn-danger:hover { background: #d32f2f; }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #2E7D32;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover { background: #f9f9f9; }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin-right: 5px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2E7D32;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-paid { background: #c8e6c9; color: #2e7d32; }
+        .status-pending { background: #fff9c4; color: #f57f17; }
+        .status-overdue { background: #ffcdd2; color: #c62828; }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success { background: #c8e6c9; color: #2e7d32; }
+        .alert-error { background: #ffcdd2; color: #c62828; }
+
+        @media (max-width: 768px) {
+            .page-header h1 { font-size: 1.8rem; }
+            .form-group { grid-template-columns: 1fr; }
+            .tabs { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <h1><i class="fas fa-money-bill-wave"></i> QUẢN LÝ TÀI CHÍNH</h1>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'dashboard')">
+            <i class="fas fa-chart-bar"></i> Tổng Quan
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'invoice')">
+            <i class="fas fa-receipt"></i> Hóa Đơn Thu
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'expense')">
+            <i class="fas fa-credit-card"></i> Chi Tiêu
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'debt')">
+            <i class="fas fa-exclamation-circle"></i> Công Nợ
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'report')">
+            <i class="fas fa-file-pdf"></i> Báo Cáo
+        </button>
+    </div>
+
+    <!-- TAB: TỔNG QUAN -->
+    <div id="dashboard" class="tab-content active">
+        <h2 class="section-title">Tổng Quan Tài Chính</h2>
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Tổng Doanh Thu</h3>
+                <div class="number" id="totalIncome">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Tổng Chi Tiêu</h3>
+                <div class="number" id="totalExpense">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Lợi Nhuận</h3>
+                <div class="number" id="profit">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Công Nợ</h3>
+                <div class="number" id="totalDebt">0</div>
+            </div>
+        </div>
+
+        <h3>Công Nợ Học Sinh Quá Hạn</h3>
+        <table>
+            <thead>
+                <tr><th>MSSV</th><th>Tên</th><th>Số Tiền</th><th>Hạn Thanh Toán</th><th>Trạng Thái</th></tr>
+            </thead>
+            <tbody id="debtAlertTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: HÓA ĐƠN THU -->
+    <div id="invoice" class="tab-content">
+        <h2 class="section-title">Quản Lý Hóa Đơn Thu Tiền</h2>
+        <div id="messageBox" style="display: none;"></div>
+
+        <h3>Thêm Hóa Đơn</h3>
+        <form id="invoiceForm">
+            <div class="form-group">
+                <div>
+                    <label for="invoiceId">Số Hóa Đơn *</label>
+                    <input type="text" id="invoiceId" placeholder="VD: INV20260513001" required>
+                </div>
+                <div>
+                    <label for="invoiceDate">Ngày Lập *</label>
+                    <input type="date" id="invoiceDate" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="studentId">Mã Học Sinh *</label>
+                    <input type="text" id="studentId" placeholder="VD: HS001" required>
+                </div>
+                <div>
+                    <label for="studentName">Tên Học Sinh *</label>
+                    <input type="text" id="studentName" placeholder="Tên học sinh" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="invoiceAmount">Số Tiền *</label>
+                    <input type="number" id="invoiceAmount" placeholder="VD: 1000000" required>
+                </div>
+                <div>
+                    <label for="invoiceReason">Lý Do Thu *</label>
+                    <select id="invoiceReason" required>
+                        <option value="">-- Chọn --</option>
+                        <option value="Học phí">Học phí</option>
+                        <option value="Bán trú">Bán trú</option>
+                        <option value="Tiền ăn">Tiền ăn</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="invoiceStatus">Trạng Thái *</label>
+                    <select id="invoiceStatus" required>
+                        <option value="Chưa thu">Chưa thu</option>
+                        <option value="Đã thu">Đã thu</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dueDate">Hạn Thanh Toán *</label>
+                    <input type="date" id="dueDate" required>
+                </div>
+            </div>
+            <div class="form-group full">
+                <div>
+                    <label for="invoiceNotes">Ghi Chú</label>
+                    <textarea id="invoiceNotes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Hóa Đơn</button>
+                <button type="reset" class="btn-secondary"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+
+        <h3 style="margin-top: 30px;">Danh Sách Hóa Đơn</h3>
+        <div class="search-box">
+            <input type="text" id="searchInvoice" placeholder="Tìm kiếm...">
+            <select id="filterInvoiceStatus" style="flex: 0 1 200px;">
+                <option value="">-- Tất cả --</option>
+                <option value="Đã thu">Đã thu</option>
+                <option value="Chưa thu">Chưa thu</option>
+            </select>
+            <button class="btn-primary" onclick="exportInvoiceExcel()"><i class="fas fa-download"></i> Xuất Excel</button>
+        </div>
+        <table>
+            <thead>
+                <tr><th>Hóa Đơn</th><th>Ngày</th><th>Học Sinh</th><th>Lý Do</th><th>Số Tiền</th><th>Trạng Thái</th><th>Hạn</th><th>Hành Động</th></tr>
+            </thead>
+            <tbody id="invoiceTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: CHI TIÊU -->
+    <div id="expense" class="tab-content">
+        <h2 class="section-title">Quản Lý Chi Tiêu</h2>
+
+        <h3>Thêm Chi Tiêu</h3>
+        <form id="expenseForm">
+            <div class="form-group">
+                <div>
+                    <label for="expenseId">Mã Chi Tiêu *</label>
+                    <input type="text" id="expenseId" placeholder="VD: EXP20260513001" required>
+                </div>
+                <div>
+                    <label for="expenseDate">Ngày Chi *</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="expenseCategory">Danh Mục *</label>
+                    <select id="expenseCategory" required>
+                        <option value="">-- Chọn --</option>
+                        <option value="Nhân công">Nhân công</option>
+                        <option value="Thực phẩm">Thực phẩm</option>
+                        <option value="Điện nước">Điện nước</option>
+                        <option value="Bảo dưỡng">Bảo dưỡng</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="expenseAmount">Số Tiền *</label>
+                    <input type="number" id="expenseAmount" placeholder="VD: 500000" required>
+                </div>
+            </div>
+            <div class="form-group full">
+                <div>
+                    <label for="expenseDescription">Mô Tả</label>
+                    <textarea id="expenseDescription" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Chi Tiêu</button>
+                <button type="reset" class="btn-secondary"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+
+        <h3 style="margin-top: 30px;">Danh Sách Chi Tiêu</h3>
+        <div class="search-box">
+            <input type="text" id="searchExpense" placeholder="Tìm kiếm...">
+            <select id="filterExpenseCategory" style="flex: 0 1 200px;">
+                <option value="">-- Tất cả danh mục --</option>
+                <option value="Nhân công">Nhân công</option>
+                <option value="Thực phẩm">Thực phẩm</option>
+                <option value="Điện nước">Điện nước</option>
+                <option value="Bảo dưỡng">Bảo dưỡng</option>
+            </select>
+            <button class="btn-primary" onclick="exportExpenseExcel()"><i class="fas fa-download"></i> Xuất Excel</button>
+        </div>
+        <table>
+            <thead>
+                <tr><th>Mã Chi</th><th>Ngày</th><th>Danh Mục</th><th>Mô Tả</th><th>Số Tiền</th><th>Hành Động</th></tr>
+            </thead>
+            <tbody id="expenseTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: CÔNG NỢ -->
+    <div id="debt" class="tab-content">
+        <h2 class="section-title">Theo Dõi Công Nợ Học Sinh</h2>
+
+        <div class="search-box">
+            <input type="text" id="searchDebt" placeholder="Tìm kiếm...">
+            <select id="filterDebtStatus" style="flex: 0 1 200px;">
+                <option value="">-- Tất cả --</option>
+                <option value="Đã thanh toán">Đã thanh toán</option>
+                <option value="Đang nợ">Đang nợ</option>
+                <option value="Quá hạn">Quá hạn</option>
+            </select>
+        </div>
+        <table>
+            <thead>
+                <tr><th>MSSV</th><th>Tên</th><th>Lý Do Nợ</th><th>Số Tiền</th><th>Ngày Nợ</th><th>Hạn</th><th>Trạng Thái</th><th>Hành Động</th></tr>
+            </thead>
+            <tbody id="debtTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: BÁO CÁO -->
+    <div id="report" class="tab-content">
+        <h2 class="section-title">Báo Cáo Tài Chính Tháng</h2>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="generateMonthlyReport()"><i class="fas fa-sync"></i> Cập Nhật Báo Cáo</button>
+            <button class="btn-secondary" onclick="exportReportExcel()"><i class="fas fa-download"></i> Xuất Báo Cáo</button>
+        </div>
+
+        <h3>Tổng Hợp Thu Chi</h3>
+        <table id="reportTable">
+            <thead>
+                <tr><th>Tháng</th><th>Doanh Thu</th><th>Chi Tiêu</th><th>Lợi Nhuận</th></tr>
+            </thead>
+            <tbody id="reportTableBody"></tbody>
+        </table>
+
+        <h3 style="margin-top: 30px;">Chi Tiêu Theo Danh Mục</h3>
+        <table id="expenseCategoryTable">
+            <thead>
+                <tr><th>Danh Mục</th><th>Số Tiền</th><th>%</th></tr>
+            </thead>
+            <tbody id="expenseCategoryTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let invoices = [];
+    let expenses = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        setTodayDate();
+        generateInvoiceId();
+        generateExpenseId();
+        updateDashboard();
+        renderInvoiceTable();
+        renderExpenseTable();
+        renderDebtTable();
+
+        document.getElementById('invoiceForm').addEventListener('submit', saveInvoice);
+        document.getElementById('expenseForm').addEventListener('submit', saveExpense);
+        document.getElementById('searchInvoice').addEventListener('input', renderInvoiceTable);
+        document.getElementById('filterInvoiceStatus').addEventListener('change', renderInvoiceTable);
+        document.getElementById('searchExpense').addEventListener('input', renderExpenseTable);
+        document.getElementById('filterExpenseCategory').addEventListener('change', renderExpenseTable);
+        document.getElementById('searchDebt').addEventListener('input', renderDebtTable);
+        document.getElementById('filterDebtStatus').addEventListener('change', renderDebtTable);
+    });
+
+    function loadData() {
+        invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+        expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+    }
+
+    function saveData() {
+        localStorage.setItem('invoices', JSON.stringify(invoices));
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+    }
+
+    function setTodayDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('invoiceDate').value = today;
+        document.getElementById('expenseDate').value = today;
+        document.getElementById('dueDate').value = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    }
+
+    function generateInvoiceId() {
+        const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const count = invoices.filter(i => i.id.includes(today)).length + 1;
+        document.getElementById('invoiceId').value = `INV${today}${String(count).padStart(3, '0')}`;
+    }
+
+    function generateExpenseId() {
+        const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const count = expenses.filter(e => e.id.includes(today)).length + 1;
+        document.getElementById('expenseId').value = `EXP${today}${String(count).padStart(3, '0')}`;
+    }
+
+    function showMessage(msg, type = 'success') {
+        const box = document.getElementById('messageBox');
+        box.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 3000);
+    }
+
+    function saveInvoice(e) {
+        e.preventDefault();
+        invoices.push({
+            id: document.getElementById('invoiceId').value,
+            date: document.getElementById('invoiceDate').value,
+            studentId: document.getElementById('studentId').value,
+            studentName: document.getElementById('studentName').value,
+            amount: parseInt(document.getElementById('invoiceAmount').value),
+            reason: document.getElementById('invoiceReason').value,
+            status: document.getElementById('invoiceStatus').value,
+            dueDate: document.getElementById('dueDate').value,
+            notes: document.getElementById('invoiceNotes').value
+        });
+        saveData();
+        document.getElementById('invoiceForm').reset();
+        setTodayDate();
+        generateInvoiceId();
+        updateDashboard();
+        renderInvoiceTable();
+        renderDebtTable();
+        showMessage('Lưu hóa đơn thành công!');
+    }
+
+    function saveExpense(e) {
+        e.preventDefault();
+        expenses.push({
+            id: document.getElementById('expenseId').value,
+            date: document.getElementById('expenseDate').value,
+            category: document.getElementById('expenseCategory').value,
+            amount: parseInt(document.getElementById('expenseAmount').value),
+            description: document.getElementById('expenseDescription').value
+        });
+        saveData();
+        document.getElementById('expenseForm').reset();
+        setTodayDate();
+        generateExpenseId();
+        updateDashboard();
+        renderExpenseTable();
+        showMessage('Lưu chi tiêu thành công!');
+    }
+
+    function deleteInvoice(id) {
+        if (confirm('Xóa hóa đơn?')) {
+            invoices = invoices.filter(i => i.id !== id);
+            saveData();
+            updateDashboard();
+            renderInvoiceTable();
+            renderDebtTable();
+        }
+    }
+
+    function deleteExpense(id) {
+        if (confirm('Xóa chi tiêu?')) {
+            expenses = expenses.filter(e => e.id !== id);
+            saveData();
+            updateDashboard();
+            renderExpenseTable();
+        }
+    }
+
+    function updateDashboard() {
+        const income = invoices.filter(i => i.status === 'Đã thu').reduce((s, i) => s + i.amount, 0);
+        const expense = expenses.reduce((s, e) => s + e.amount, 0);
+        const debt = invoices.filter(i => i.status === 'Chưa thu').reduce((s, i) => s + i.amount, 0);
+        
+        document.getElementById('totalIncome').textContent = income.toLocaleString('vi-VN') + ' đ';
+        document.getElementById('totalExpense').textContent = expense.toLocaleString('vi-VN') + ' đ';
+        document.getElementById('profit').textContent = (income - expense).toLocaleString('vi-VN') + ' đ';
+        document.getElementById('totalDebt').textContent = debt.toLocaleString('vi-VN') + ' đ';
+
+        const today = new Date();
+        const overdueDebt = invoices.filter(i => i.status === 'Chưa thu' && new Date(i.dueDate) < today);
+        const tbody = document.getElementById('debtAlertTable');
+        tbody.innerHTML = overdueDebt.map(i => `
+            <tr>
+                <td>${i.studentId}</td>
+                <td>${i.studentName}</td>
+                <td>${i.amount.toLocaleString('vi-VN')} đ</td>
+                <td>${i.dueDate}</td>
+                <td><span class="status-badge status-overdue">Quá Hạn</span></td>
+            </tr>
+        `).join('');
+        if (overdueDebt.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Không có công nợ quá hạn</td></tr>';
+    }
+
+    function renderInvoiceTable() {
+        const search = document.getElementById('searchInvoice').value.toLowerCase();
+        const status = document.getElementById('filterInvoiceStatus').value;
+        const filtered = invoices.filter(i => (i.studentName.toLowerCase().includes(search) || i.id.toLowerCase().includes(search)) && (!status || i.status === status));
+        
+        document.getElementById('invoiceTable').innerHTML = filtered.map(i => `
+            <tr>
+                <td>${i.id}</td>
+                <td>${i.date}</td>
+                <td>${i.studentName}</td>
+                <td>${i.reason}</td>
+                <td>${i.amount.toLocaleString('vi-VN')} đ</td>
+                <td><span class="status-badge status-${i.status === 'Đã thu' ? 'paid' : 'pending'}">${i.status}</span></td>
+                <td>${i.dueDate}</td>
+                <td><button class="action-btn btn-danger" onclick="deleteInvoice('${i.id}')"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('') || '<tr><td colspan="8" style="text-align: center;">Không có dữ liệu</td></tr>';
+    }
+
+    function renderExpenseTable() {
+        const search = document.getElementById('searchExpense').value.toLowerCase();
+        const category = document.getElementById('filterExpenseCategory').value;
+        const filtered = expenses.filter(e => (e.description.toLowerCase().includes(search) || e.id.toLowerCase().includes(search)) && (!category || e.category === category));
+        
+        document.getElementById('expenseTable').innerHTML = filtered.map(e => `
+            <tr>
+                <td>${e.id}</td>
+                <td>${e.date}</td>
+                <td>${e.category}</td>
+                <td>${e.description}</td>
+                <td>${e.amount.toLocaleString('vi-VN')} đ</td>
+                <td><button class="action-btn btn-danger" onclick="deleteExpense('${e.id}')"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('') || '<tr><td colspan="6" style="text-align: center;">Không có dữ liệu</td></tr>';
+    }
+
+    function renderDebtTable() {
+        const search = document.getElementById('searchDebt').value.toLowerCase();
+        const status = document.getElementById('filterDebtStatus').value;
+        const today = new Date();
+        
+        const debtList = invoices.filter(i => i.status === 'Chưa thu').map(i => {
+            let debtStatus = 'Đang nợ';
+            if (new Date(i.dueDate) < today) debtStatus = 'Quá hạn';
+            return { ...i, debtStatus };
+        });
+
+        const filtered = debtList.filter(d => (d.studentName.toLowerCase().includes(search) || d.studentId.toLowerCase().includes(search)) && (!status || d.debtStatus === status));
+        
+        document.getElementById('debtTable').innerHTML = filtered.map(d => `
+            <tr>
+                <td>${d.studentId}</td>
+                <td>${d.studentName}</td>
+                <td>${d.reason}</td>
+                <td>${d.amount.toLocaleString('vi-VN')} đ</td>
+                <td>${d.date}</td>
+                <td>${d.dueDate}</td>
+                <td><span class="status-badge status-${d.debtStatus === 'Quá hạn' ? 'overdue' : 'pending'}">${d.debtStatus}</span></td>
+                <td><button class="action-btn btn-primary" onclick="markAsPaid('${d.id}')"><i class="fas fa-check"></i> Thanh toán</button></td>
+            </tr>
+        `).join('') || '<tr><td colspan="8" style="text-align: center;">Không có công nợ</td></tr>';
+    }
+
+    function markAsPaid(id) {
+        const inv = invoices.find(i => i.id === id);
+        if (inv) {
+            inv.status = 'Đã thu';
+            saveData();
+            updateDashboard();
+            renderInvoiceTable();
+            renderDebtTable();
+            showMessage('Cập nhật trạng thái thành công!');
+        }
+    }
+
+    function generateMonthlyReport() {
+        const months = {};
+        invoices.forEach(i => {
+            const month = i.date.slice(0, 7);
+            if (!months[month]) months[month] = { income: 0, expense: 0 };
+            if (i.status === 'Đã thu') months[month].income += i.amount;
+        });
+        expenses.forEach(e => {
+            const month = e.date.slice(0, 7);
+            if (!months[month]) months[month] = { income: 0, expense: 0 };
+            months[month].expense += e.amount;
+        });
+
+        const tbody = document.getElementById('reportTableBody');
+        tbody.innerHTML = Object.entries(months).sort().map(([month, data]) => `
+            <tr>
+                <td>${month}</td>
+                <td>${data.income.toLocaleString('vi-VN')} đ</td>
+                <td>${data.expense.toLocaleString('vi-VN')} đ</td>
+                <td style="color: ${data.income - data.expense >= 0 ? '#2e7d32' : '#c62828'}">${(data.income - data.expense).toLocaleString('vi-VN')} đ</td>
+            </tr>
+        `).join('');
+
+        const categories = {};
+        expenses.forEach(e => {
+            if (!categories[e.category]) categories[e.category] = 0;
+            categories[e.category] += e.amount;
+        });
+
+        const total = Object.values(categories).reduce((a, b) => a + b, 0);
+        const ctBody = document.getElementById('expenseCategoryTableBody');
+        ctBody.innerHTML = Object.entries(categories).map(([cat, amount]) => `
+            <tr>
+                <td>${cat}</td>
+                <td>${amount.toLocaleString('vi-VN')} đ</td>
+                <td>${((amount / total) * 100).toFixed(1)}%</td>
+            </tr>
+        `).join('');
+
+        showMessage('Báo cáo đã được cập nhật!');
+    }
+
+    function exportInvoiceExcel() {
+        const data = invoices.map(i => ({ 'Hóa Đơn': i.id, 'Ngày': i.date, 'Học Sinh': i.studentName, 'Lý Do': i.reason, 'Số Tiền': i.amount, 'Trạng Thái': i.status }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Hóa Đơn');
+        XLSX.writeFile(wb, 'hoa-don.xlsx');
+    }
+
+    function exportExpenseExcel() {
+        const data = expenses.map(e => ({ 'Mã Chi': e.id, 'Ngày': e.date, 'Danh Mục': e.category, 'Số Tiền': e.amount }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Chi Tiêu');
+        XLSX.writeFile(wb, 'chi-tieu.xlsx');
+    }
+
+    function exportReportExcel() {
+        const table = document.getElementById('reportTable');
+        const ws = XLSX.utils.table_to_sheet(table);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo');
+        XLSX.writeFile(wb, 'bao-cao-tai-chinh.xlsx');
+    }
+
+    function switchTab(btn, tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+        if (tabName === 'report') generateMonthlyReport();
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Bán Trú Thông Minh</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="auth-check.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin: 2px 0 0 0;
+        }
+
+        .header-username {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Main Container */
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 40px 30px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-title h2 {
+            font-size: 36px;
+            color: #1e3c72;
+            margin: 0 0 12px 0;
+            font-weight: 700;
+        }
+
+        /* Grid Container */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: #2c3e50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            padding: 20px 15px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(30, 60, 114, 0.15);
+            background: linear-gradient(135deg, #f8fafb 0%, #f0f4f9 100%);
+        }
+
+        .icon-box {
+            width: 99px;
+            height: 99px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover .icon-box {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.3);
+        }
+
+        .icon-box i {
+            font-size: 46px;
+            color: white;
+        }
+
+        .menu-item span {
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #2c3e50;
+        }
+
+        /* Footer Buttons */
+        .footer-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-logout { 
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-pass { 
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 25px 15px;
+            }
+
+            .grid-container {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 18px;
+            }
+
+            .page-title h2 {
+                font-size: 28px;
+            }
+
+            .icon-box {
+                width: 75px;
+                height: 75px;
+            }
+
+            .icon-box i {
+                font-size: 36px;
+            }
+
+            .footer-buttons {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-title h1 {
+                font-size: 18px;
+            }
+
+            .header-title p {
+                font-size: 10px;
+            }
+
+            .grid-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .page-title h2 {
+                font-size: 22px;
+            }
+
+            .menu-item {
+                padding: 15px 10px;
+            }
+
+            .icon-box {
+                width: 65px;
+                height: 65px;
+            }
+
+            .icon-box i {
+                font-size: 28px;
+            }
+
+            .menu-item span {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">🏫</div>
+                <div class="header-title">
+                    <h1>Quản Lý Bán Trú</h1>
+                    <p>Hệ thống thông minh</p>
+                    <div class="header-username" id="headerUsername">
+                        <i class="fas fa-user-circle"></i> <span id="usernameDisplay">Đang tải...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-pass"><i class="fas fa-key"></i> Đổi mật khẩu</button>
+                <button class="btn btn-logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 style="text-align: center; font-size: 40px; font-weight: 700; color: #1e3c72; margin-bottom: 40px;">
+           HỆ THỐNG QUẢN LÝ BÁN TRÚ THÔNG MINH
+        </h2>
+
+        <div class="grid-container">
+            <a href="nha-truong.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-school"></i></div>
+            <span>Nhà Trường</span>
+        </a>
+        <a href="phong-o.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-bed"></i></div>
+            <span>Phòng Ở</span>
+        </a>
+        <a href="quan-ly-hoc-sinh.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-user-graduate"></i></div>
+            <span>Học Sinh</span>
+        </a>
+        <a href="diem-danh.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-qrcode"></i></div>
+            <span>Điểm Danh</span>
+        </a>
+        <a href="nhan-dien.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-id-card-alt"></i></div>
+            <span>Nhận Diện</span>
+        </a>
+        <a href="cs-vat-chat.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-tools"></i></div>
+            <span>CS Vật Chất</span>
+        </a>
+
+        <a href="thuc-don.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-utensils"></i></div>
+            <span>Thực Đơn</span>
+        </a>
+        <a href="kiem-thuc.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-clipboard-check"></i></div>
+            <span>Kiểm Thực</span>
+        </a>
+        <a href="tai-chinh.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-money-bill-wave"></i></div>
+            <span>Tài Chính</span>
+        </a>
+        <a href="bao-cao.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-bullhorn"></i></div>
+            <span>Báo Cáo</span>
+        </a>
+        <a href="tkb-ban-tru.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-calendar-alt"></i></div>
+            <span>TKB Bán Trú</span>
+        </a>
+        <a href="tim-kiem.html" class="menu-item">
+            <div class="icon-box"><i class="fas fa-search"></i></div>
+            <span>Tìm Kiếm</span>
+        </a>
+        </div>
+    </div>
+
+    <script>
+        // Check login status and display username
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in (sử dụng sessionStorage)
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            
+            // Display username
+            const username = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser') || 'Người dùng';
+            const displayName = username.charAt(0).toUpperCase() + username.slice(1);
+            document.getElementById('usernameDisplay').textContent = displayName;
+
+            // Logout functionality
+            const logoutBtn = document.querySelector('.btn-logout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                        sessionStorage.removeItem('isLoggedIn');
+                        sessionStorage.removeItem('currentUser');
+                        sessionStorage.removeItem('loginTime');
+                        localStorage.removeItem('currentUser');
+                        // Tải lại trang để hiển thị modal đăng nhập
+                        location.reload();
+                    }
+                });
+            }
+
+            // Change password functionality
+            const passBtn = document.querySelector('.btn-pass');
+            if (passBtn) {
+                passBtn.addEventListener('click', function() {
+                    showChangePasswordModal();
+                });
+            }
+        });
+
+        // Change password modal
+        function showChangePasswordModal() {
+            const modal = document.getElementById('changePasswordModal');
+            const overlay = document.getElementById('changePasswordOverlay');
+            const form = document.getElementById('changePasswordForm');
+            const messageDiv = document.getElementById('changePasswordMessage');
+            
+            // Reset form
+            form.reset();
+            messageDiv.innerHTML = '';
+            messageDiv.className = '';
+            
+            // Show modal
+            overlay.style.display = 'block';
+            modal.style.display = 'block';
+            document.getElementById('oldPassword').focus();
+            
+            // Handle form submission
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const oldPassword = document.getElementById('oldPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const currentPassword = '123456'; // Demo password
+                
+                // Validation
+                if (!oldPassword) {
+                    showPasswordMessage('⚠️ Vui lòng nhập mật khẩu hiện tại!', 'warning');
+                    return;
+                }
+                
+                if (oldPassword !== currentPassword) {
+                    showPasswordMessage('❌ Mật khẩu hiện tại không chính xác!', 'error');
+                    document.getElementById('oldPassword').focus();
+                    return;
+                }
+                
+                if (!newPassword) {
+                    showPasswordMessage('⚠️ Vui lòng nhập mật khẩu mới!', 'warning');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    showPasswordMessage('❌ Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+                    return;
+                }
+                
+                if (!confirmPassword) {
+                    showPasswordMessage('⚠️ Vui lòng xác nhận mật khẩu mới!', 'warning');
+                    return;
+                }
+                
+                if (confirmPassword !== newPassword) {
+                    showPasswordMessage('❌ Mật khẩu xác nhận không khớp!', 'error');
+                    document.getElementById('confirmPassword').focus();
+                    return;
+                }
+                
+                // Success
+                sessionStorage.setItem('userPassword', newPassword);
+                showPasswordMessage('✅ Đổi mật khẩu thành công!', 'success');
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    modal.style.display = 'none';
+                }, 1500);
+            };
+        }
+        
+        function showPasswordMessage(message, type) {
+            const messageDiv = document.getElementById('changePasswordMessage');
+            messageDiv.innerHTML = message;
+            messageDiv.className = 'password-message ' + type;
+        }
+        
+        // Close modal when clicking overlay
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('changePasswordOverlay');
+            const modal = document.getElementById('changePasswordModal');
+            const closeBtn = document.getElementById('closePasswordModal');
+            const cancelBtn = document.getElementById('cancelPasswordBtn');
+            
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    overlay.style.display = 'none';
+                    modal.style.display = 'none';
+                });
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    overlay.style.display = 'none';
+                    modal.style.display = 'none';
+                });
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    overlay.style.display = 'none';
+                    modal.style.display = 'none';
+                });
+            }
+        });
+    </script>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordOverlay" class="password-modal-overlay"></div>
+    <div id="changePasswordModal" class="password-modal">
+        <div class="password-modal-header">
+            <h3><i class="fas fa-lock"></i> Đổi Mật Khẩu</h3>
+            <button type="button" id="closePasswordModal" class="close-btn">&times;</button>
+        </div>
+        <div class="password-modal-body">
+            <div id="changePasswordMessage" class="password-message"></div>
+            <form id="changePasswordForm">
+                <div class="password-form-group">
+                    <label for="oldPassword">Mật khẩu hiện tại:</label>
+                    <input type="password" id="oldPassword" placeholder="Nhập mật khẩu hiện tại" required>
+                </div>
+                <div class="password-form-group">
+                    <label for="newPassword">Mật khẩu mới:</label>
+                    <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)" required>
+                </div>
+                <div class="password-form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu mới:</label>
+                    <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu mới" required>
+                </div>
+                <div class="password-modal-buttons">
+                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Xác Nhận</button>
+                    <button type="button" id="cancelPasswordBtn" class="btn-cancel"><i class="fas fa-times"></i> Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        /* Password Modal Styles */
+        .password-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+        }
+
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 2001;
+            max-width: 450px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        .password-modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .password-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            opacity: 0.8;
+        }
+
+        .password-modal-body {
+            padding: 30px;
+        }
+
+        .password-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .password-message.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .password-message.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .password-message.warning {
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .password-form-group {
+            margin-bottom: 18px;
+        }
+
+        .password-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .password-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .password-form-group input:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .password-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-confirm,
+        .btn-cancel {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #2c3e50;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translate(-50%, -45%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .password-modal {
+                width: 95%;
+            }
+
+            .password-modal-body {
+                padding: 20px;
+            }
+
+            .password-modal-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</body>
+</html>

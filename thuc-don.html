@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Thực Đơn</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover { background: #eeeeee; }
+        .tab-btn.active { color: #ff9800; border-bottom-color: #ff9800; }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .section-title { color: #ff9800; border-bottom: 2px solid #ff9800; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.3rem; }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background: #ff9800; color: white; }
+        .btn-primary:hover { background: #f57c00; transform: translateY(-2px); }
+
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-secondary:hover { background: #e0e0e0; }
+
+        .btn-danger { background: #f44336; color: white; }
+        .btn-danger:hover { background: #d32f2f; }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #ff9800;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover { background: #f9f9f9; }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin-right: 5px;
+        }
+
+        .menu-card {
+            background: #fff9c4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 5px solid #ff9800;
+        }
+
+        .menu-card h4 {
+            margin: 0 0 10px 0;
+            color: #ff9800;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ffe0b2;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success { background: #c8e6c9; color: #2e7d32; }
+        .alert-error { background: #ffcdd2; color: #c62828; }
+
+        .nutrition-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .nutrition-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .nutrition-box .label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .nutrition-box .value {
+            font-weight: bold;
+            color: #ff9800;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 { font-size: 1.8rem; }
+            .form-group { grid-template-columns: 1fr; }
+            .menu-item { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <h1><i class="fas fa-utensils"></i> QUẢN LÝ THỰC ĐƠN</h1>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'menu')">
+            <i class="fas fa-calendar-alt"></i> Thực Đơn
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'dishes')">
+            <i class="fas fa-bowl-food"></i> Quản Lý Món Ăn
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'ingredients')">
+            <i class="fas fa-carrot"></i> Nguyên Liệu
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'nutrition')">
+            <i class="fas fa-heartbeat"></i> Dinh Dưỡng
+        </button>
+    </div>
+
+    <!-- TAB: THỰC ĐƠN -->
+    <div id="menu" class="tab-content active">
+        <h2 class="section-title">Lập Thực Đơn Theo Ngày</h2>
+        <div id="messageBox" style="display: none;"></div>
+
+        <form id="menuForm">
+            <div class="form-group">
+                <div>
+                    <label for="menuDate">Ngày Thực Đơn *</label>
+                    <input type="date" id="menuDate" required>
+                </div>
+                <div>
+                    <label for="menuClass">Lớp/Khối *</label>
+                    <select id="menuClass" required>
+                        <option value="">-- Chọn --</option>
+                        <option value="Toàn trường">Toàn trường</option>
+                        <option value="A101">A101</option>
+                        <option value="A102">A102</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Bữa Sáng</h3>
+            <div class="form-group">
+                <div>
+                    <label for="breakfastDish">Món Ăn *</label>
+                    <select id="breakfastDish" required>
+                        <option value="">-- Chọn món --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="breakfastQty">Khẩu Phần (người)</label>
+                    <input type="number" id="breakfastQty" placeholder="Số khẩu phần" value="1">
+                </div>
+            </div>
+
+            <h3>Bữa Trưa</h3>
+            <div class="form-group">
+                <div>
+                    <label for="lunchDish">Món Ăn *</label>
+                    <select id="lunchDish" required>
+                        <option value="">-- Chọn món --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="lunchQty">Khẩu Phần (người)</label>
+                    <input type="number" id="lunchQty" placeholder="Số khẩu phần" value="1">
+                </div>
+            </div>
+
+            <h3>Bữa Chiều</h3>
+            <div class="form-group">
+                <div>
+                    <label for="afternoonDish">Món Ăn *</label>
+                    <select id="afternoonDish" required>
+                        <option value="">-- Chọn món --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="afternoonQty">Khẩu Phần (người)</label>
+                    <input type="number" id="afternoonQty" placeholder="Số khẩu phần" value="1">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Thực Đơn</button>
+                <button type="reset" class="btn-secondary"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+
+        <h3 style="margin-top: 30px;">Thực Đơn Hôm Nay</h3>
+        <div id="menuDisplay"></div>
+    </div>
+
+    <!-- TAB: QUẢN LÝ MÓN ĂN -->
+    <div id="dishes" class="tab-content">
+        <h2 class="section-title">Quản Lý Danh Sách Món Ăn</h2>
+
+        <h3>Thêm Món Ăn</h3>
+        <form id="dishForm">
+            <div class="form-group">
+                <div>
+                    <label for="dishId">Mã Món *</label>
+                    <input type="text" id="dishId" placeholder="VD: MA001" required>
+                </div>
+                <div>
+                    <label for="dishName">Tên Món *</label>
+                    <input type="text" id="dishName" placeholder="Tên món ăn" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="dishCategory">Loại Món *</label>
+                    <select id="dishCategory" required>
+                        <option value="">-- Chọn --</option>
+                        <option value="Cơm">Cơm</option>
+                        <option value="Canh">Canh</option>
+                        <option value="Thịt/Cá">Thịt/Cá</option>
+                        <option value="Rau">Rau</option>
+                        <option value="Trứng">Trứng</option>
+                        <option value="Tráng miệng">Tráng miệng</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dishPrice">Giá (đ/khẩu)</label>
+                    <input type="number" id="dishPrice" placeholder="VD: 15000">
+                </div>
+            </div>
+            <div class="form-group full">
+                <div>
+                    <label for="dishDescription">Mô Tả</label>
+                    <textarea id="dishDescription" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Món</button>
+                <button type="reset" class="btn-secondary"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+
+        <h3 style="margin-top: 30px;">Danh Sách Món Ăn</h3>
+        <table>
+            <thead>
+                <tr><th>Mã</th><th>Tên Món</th><th>Loại</th><th>Giá</th><th>Mô Tả</th><th>Hành Động</th></tr>
+            </thead>
+            <tbody id="dishTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: NGUYÊN LIỆU -->
+    <div id="ingredients" class="tab-content">
+        <h2 class="section-title">Quản Lý Nguyên Liệu</h2>
+
+        <h3>Thêm Nguyên Liệu</h3>
+        <form id="ingredientForm">
+            <div class="form-group">
+                <div>
+                    <label for="ingredientName">Tên Nguyên Liệu *</label>
+                    <input type="text" id="ingredientName" placeholder="VD: Gạo, Thịt gà" required>
+                </div>
+                <div>
+                    <label for="ingredientUnit">Đơn Vị *</label>
+                    <select id="ingredientUnit" required>
+                        <option value="kg">kg</option>
+                        <option value="lít">lít</option>
+                        <option value="cái">cái</option>
+                        <option value="hộp">hộp</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div>
+                    <label for="ingredientQuantity">Số Lượng Hiện Có *</label>
+                    <input type="number" id="ingredientQuantity" placeholder="0" required>
+                </div>
+                <div>
+                    <label for="ingredientMinStock">Tồn Kho Tối Thiểu</label>
+                    <input type="number" id="ingredientMinStock" placeholder="0">
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Lưu Nguyên Liệu</button>
+                <button type="reset" class="btn-secondary"><i class="fas fa-redo"></i> Làm Mới</button>
+            </div>
+        </form>
+
+        <h3 style="margin-top: 30px;">Danh Sách Nguyên Liệu</h3>
+        <table>
+            <thead>
+                <tr><th>Nguyên Liệu</th><th>Đơn Vị</th><th>Tồn Kho</th><th>Tối Thiểu</th><th>Trạng Thái</th><th>Hành Động</th></tr>
+            </thead>
+            <tbody id="ingredientTable"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB: DINH DƯỠNG -->
+    <div id="nutrition" class="tab-content">
+        <h2 class="section-title">Thống Kê Dinh Dưỡng</h2>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="calculateNutrition()"><i class="fas fa-sync"></i> Cập Nhật Thống Kê</button>
+        </div>
+
+        <h3>Dinh Dưỡng Trung Bình Hôm Nay</h3>
+        <div id="nutritionStats"></div>
+
+        <h3 style="margin-top: 30px;">Chi Tiết Dinh Dưỡng Theo Bữa</h3>
+        <table>
+            <thead>
+                <tr><th>Bữa Ăn</th><th>Calo</th><th>Protein</th><th>Fat</th><th>Carbs</th><th>Fiber</th></tr>
+            </thead>
+            <tbody id="mealNutritionTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let menus = [];
+    let dishes = [];
+    let ingredients = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        setTodayDate();
+        populateDishSelects();
+        renderDishTable();
+        renderIngredientTable();
+        renderMenuDisplay();
+
+        document.getElementById('menuForm').addEventListener('submit', saveMenu);
+        document.getElementById('dishForm').addEventListener('submit', saveDish);
+        document.getElementById('ingredientForm').addEventListener('submit', saveIngredient);
+    });
+
+    function loadData() {
+        menus = JSON.parse(localStorage.getItem('menus') || '[]');
+        dishes = JSON.parse(localStorage.getItem('dishes') || JSON.stringify([
+            { id: 'MA001', name: 'Cơm trắng', category: 'Cơm', price: 5000 },
+            { id: 'MA002', name: 'Canh cua', category: 'Canh', price: 15000 },
+            { id: 'MA003', name: 'Thịt gà xào', category: 'Thịt/Cá', price: 25000 }
+        ]));
+        ingredients = JSON.parse(localStorage.getItem('ingredients') || '[]');
+    }
+
+    function saveData() {
+        localStorage.setItem('menus', JSON.stringify(menus));
+        localStorage.setItem('dishes', JSON.stringify(dishes));
+        localStorage.setItem('ingredients', JSON.stringify(ingredients));
+    }
+
+    function setTodayDate() {
+        document.getElementById('menuDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    function showMessage(msg, type = 'success') {
+        const box = document.getElementById('messageBox');
+        box.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 3000);
+    }
+
+    function populateDishSelects() {
+        const selects = ['breakfastDish', 'lunchDish', 'afternoonDish'];
+        selects.forEach(sel => {
+            const select = document.getElementById(sel);
+            select.innerHTML = '<option value="">-- Chọn món --</option>';
+            dishes.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name;
+                select.appendChild(opt);
+            });
+        });
+    }
+
+    function saveMenu(e) {
+        e.preventDefault();
+        menus.push({
+            date: document.getElementById('menuDate').value,
+            class: document.getElementById('menuClass').value,
+            breakfast: { dish: document.getElementById('breakfastDish').value, qty: document.getElementById('breakfastQty').value },
+            lunch: { dish: document.getElementById('lunchDish').value, qty: document.getElementById('lunchQty').value },
+            afternoon: { dish: document.getElementById('afternoonDish').value, qty: document.getElementById('afternoonQty').value }
+        });
+        saveData();
+        document.getElementById('menuForm').reset();
+        setTodayDate();
+        renderMenuDisplay();
+        showMessage('Lưu thực đơn thành công!');
+    }
+
+    function renderMenuDisplay() {
+        const today = new Date().toISOString().split('T')[0];
+        const todayMenu = menus.filter(m => m.date === today);
+        const div = document.getElementById('menuDisplay');
+        
+        if (todayMenu.length === 0) {
+            div.innerHTML = '<p style="text-align: center; color: #999;">Chưa có thực đơn hôm nay</p>';
+            return;
+        }
+
+        div.innerHTML = todayMenu.map(m => `
+            <div class="menu-card">
+                <h4>🍽️ ${m.class} - ${m.date}</h4>
+                <div class="menu-item"><strong>Sáng:</strong> ${getDishName(m.breakfast.dish)} (${m.breakfast.qty} người)</div>
+                <div class="menu-item"><strong>Trưa:</strong> ${getDishName(m.lunch.dish)} (${m.lunch.qty} người)</div>
+                <div class="menu-item"><strong>Chiều:</strong> ${getDishName(m.afternoon.dish)} (${m.afternoon.qty} người)</div>
+            </div>
+        `).join('');
+    }
+
+    function getDishName(dishId) {
+        const dish = dishes.find(d => d.id === dishId);
+        return dish ? dish.name : 'Không xác định';
+    }
+
+    function saveDish(e) {
+        e.preventDefault();
+        dishes.push({
+            id: document.getElementById('dishId').value,
+            name: document.getElementById('dishName').value,
+            category: document.getElementById('dishCategory').value,
+            price: parseInt(document.getElementById('dishPrice').value) || 0,
+            description: document.getElementById('dishDescription').value
+        });
+        saveData();
+        document.getElementById('dishForm').reset();
+        populateDishSelects();
+        renderDishTable();
+        showMessage('Lưu món ăn thành công!');
+    }
+
+    function deleteDish(id) {
+        if (confirm('Xóa món ăn?')) {
+            dishes = dishes.filter(d => d.id !== id);
+            saveData();
+            populateDishSelects();
+            renderDishTable();
+        }
+    }
+
+    function renderDishTable() {
+        document.getElementById('dishTable').innerHTML = dishes.map(d => `
+            <tr>
+                <td>${d.id}</td>
+                <td>${d.name}</td>
+                <td>${d.category}</td>
+                <td>${(d.price || 0).toLocaleString('vi-VN')} đ</td>
+                <td>${d.description}</td>
+                <td><button class="action-btn btn-danger" onclick="deleteDish('${d.id}')"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('') || '<tr><td colspan="6" style="text-align: center;">Không có dữ liệu</td></tr>';
+    }
+
+    function saveIngredient(e) {
+        e.preventDefault();
+        ingredients.push({
+            name: document.getElementById('ingredientName').value,
+            unit: document.getElementById('ingredientUnit').value,
+            quantity: parseInt(document.getElementById('ingredientQuantity').value),
+            minStock: parseInt(document.getElementById('ingredientMinStock').value) || 0
+        });
+        saveData();
+        document.getElementById('ingredientForm').reset();
+        renderIngredientTable();
+        showMessage('Lưu nguyên liệu thành công!');
+    }
+
+    function deleteIngredient(name) {
+        if (confirm('Xóa nguyên liệu?')) {
+            ingredients = ingredients.filter(i => i.name !== name);
+            saveData();
+            renderIngredientTable();
+        }
+    }
+
+    function renderIngredientTable() {
+        document.getElementById('ingredientTable').innerHTML = ingredients.map(i => {
+            const status = i.quantity <= i.minStock ? 'Cần mua' : 'Đủ';
+            return `
+                <tr>
+                    <td>${i.name}</td>
+                    <td>${i.unit}</td>
+                    <td>${i.quantity}</td>
+                    <td>${i.minStock}</td>
+                    <td><span style="color: ${status === 'Cần mua' ? '#d32f2f' : '#2e7d32'}">${status}</span></td>
+                    <td><button class="action-btn btn-danger" onclick="deleteIngredient('${i.name}')"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+        }).join('') || '<tr><td colspan="6" style="text-align: center;">Không có dữ liệu</td></tr>';
+    }
+
+    function calculateNutrition() {
+        const nutritionStats = {
+            'Calo': 2000,
+            'Protein': 60,
+            'Fat': 65,
+            'Carbs': 300,
+            'Fiber': 30
+        };
+
+        const statsDiv = document.getElementById('nutritionStats');
+        const html = `
+            <div class="nutrition-info">
+                ${Object.entries(nutritionStats).map(([key, value]) => `
+                    <div class="nutrition-box">
+                        <div class="label">${key}</div>
+                        <div class="value">${value}</div>
+                        <div class="label" style="font-size: 0.75rem;">${key === 'Calo' ? 'kcal' : 'g'}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        statsDiv.innerHTML = html;
+
+        document.getElementById('mealNutritionTable').innerHTML = `
+            <tr><td>Sáng</td><td>600</td><td>18</td><td>20</td><td>90</td><td>5</td></tr>
+            <tr><td>Trưa</td><td>800</td><td>25</td><td>25</td><td>120</td><td>8</td></tr>
+            <tr><td>Chiều</td><td>600</td><td>17</td><td>20</td><td>90</td><td>7</td></tr>
+        `;
+
+        showMessage('Thống kê dinh dưỡng đã được cập nhật!');
+    }
+
+    function switchTab(btn, tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
