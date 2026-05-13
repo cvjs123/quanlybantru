@@ -49,20 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTeachersAndUpdateUI();
 
     function loadTeachersAndUpdateUI() {
-        // Load teachers from shared localStorage
+        // Load teachers from nha-truong storage (shared localStorage)
         let teachers = JSON.parse(localStorage.getItem('teachers')) || [];
-        if (teachers.length === 0) {
-            // Fallback default teachers
-            teachers = [
-                { id: 'GV001', name: 'Nguyễn Thị Hà', department: 'Toán', phone: '987013380', email: 'ha.nguyen@school.edu.vn' },
-                { id: 'GV002', name: 'Lê Thị Hường', department: 'Văn', phone: '975605814', email: 'huong.le@school.edu.vn' },
-                { id: 'GV003', name: 'Nguyễn Văn Bằng', department: 'Anh', phone: '0912345678', email: 'bang.nguyen@school.edu.vn' }
-            ];
-            localStorage.setItem('teachers', JSON.stringify(teachers));
-        }
-            localStorage.setItem('teachers', JSON.stringify(teachers));
-        }
-
+        
         // Update select options
         teacherSelect.innerHTML = '<option value="">-- Chọn giáo viên --</option>';
         teachers.forEach(teacher => {
@@ -71,7 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: teacher.name, 
                 image: teacher.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5Q0E0QUYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HaeG7h3Rh7JuZyBwaOG7qW5nPC90ZXh0Pgo8L3N2Zz4K',
                 phone: teacher.phone,
-                email: teacher.email || `${teacher.name.toLowerCase().replace(/\s+/g, '.')}@school.edu.vn`
+                email: teacher.email || `${teacher.name.toLowerCase().replace(/\s+/g, '.')}@school.edu.vn`,
+                subject: teacher.subject || '',
+                department: teacher.subject || '',
+                id: teacher.id || ''
             });
             option.textContent = teacher.name;
             teacherSelect.appendChild(option);
@@ -84,6 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
     teacherSelect.addEventListener('change', (e) => {
         const selected = JSON.parse(e.target.value || '{}');
         teacherImage.src = selected.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5Q0E0QUYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HaeG7h3Rh7JuZyBwaOG7qW5nPC90ZXh0Pgo8L3N2Zz4K';
+        
+        // Auto-populate teacher information from nha-truong data
+        document.getElementById('teacherID').value = selected.id || '';
+        document.getElementById('department').value = selected.department || '';
+        document.getElementById('teacherEmail').value = selected.email || '';
+        document.getElementById('teacherPhone').value = selected.phone || '';
+        
         // Reset file input when changing teacher
         document.getElementById('teacherImageInput').value = '';
     });
